@@ -26,21 +26,27 @@
 
 **Metrics**: 47 tests passing | 89% coverage | Real data parsing ✓
 
-## 🎯 Immediate Next (Phase 2)
+## ✅ Completed (Phase 2)
 
-5. **Phase 2: Vector Store** ← START HERE
-   - [ ] `src/vectorstore/embeddings.py`: OpenAI API wrapper (text-embedding-3-small)
-   - [ ] `src/vectorstore/storage.py`: SQLite vector storage + hybrid search
-   - [ ] `tests/integration/test_retrieval.py`: Semantic + keyword search tests
-   
-   **Time**: ~40 min | **Success**: Store embeddings, retrieve by similarity
+5. ✓ **Phase 2: Vector Store**
+   - ✓ `src/vectorstore/embeddings.py`: OpenAI wrapper + MockEmbeddingClient
+   - ✓ `src/vectorstore/storage.py`: SQLiteVectorStore (CRUD + similarity)
+   - ✓ `src/vectorstore/retrieval.py`: HybridRetriever (semantic + keyword)
+   - ✓ `tests/unit/test_embeddings.py`: 9 tests (determinism, batch)
+   - ✓ `tests/integration/test_vectorstore.py`: 13 tests (CRUD, search, metadata)
+   - ✓ `tests/integration/test_retrieval.py`: 12 tests (hybrid, weights)
 
-## 🔄 Short Term (Later in Session)
+**Metrics**: 34 new tests passing | 81 total tests | 0 regressions
 
-6. **Phase 3: Analysis Tools** ← AFTER Phase 2
+## 🎯 Immediate Next (Phase 3)
+
+6. **Phase 3: Analysis Tools** ← START HERE
    - [ ] `src/analysis/outliers.py`: Z-score + IQR detection
-   - [ ] `src/analysis/aggregations.py`: Top items, stats
-   - [ ] `tests/unit/test_outliers.py`: Edge case tests
+   - [ ] `src/analysis/aggregations.py`: Top items, statistics, summaries
+   - [ ] `src/analysis/comparisons.py`: Bidder/item comparisons
+   - [ ] `tests/unit/test_analysis.py`: Edge case tests (all equal, single value, etc)
+   
+   **Time**: ~35 min | **Success**: Detect outliers, compute stats, enable agent queries
    
 6. **Phase 3: Analysis Tools**
    - [ ] `src/analysis/outliers.py`: Z-score + IQR
