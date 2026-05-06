@@ -23,7 +23,6 @@ except ImportError:
 from src.data.loaders import DataLoader
 from src.data.validators import DataValidator
 from src.vectorstore.storage import SQLiteVectorStore
-from src.vectorstore.retrieval import HybridRetriever
 from src.agent.core import AgentExecutor
 from src.config import get_settings
 
