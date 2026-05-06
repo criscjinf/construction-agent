@@ -16,7 +16,7 @@ git clone <repo-url>
 cd construction-agent
 
 # Create virtual environment
-python3.11 -m venv venv
+python3 -m venv venv
 source venv/bin/activate  # or: venv\Scripts\activate on Windows
 
 # Install dependencies

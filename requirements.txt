@@ -1,5 +1,4 @@
-# Core
-python==3.11.*
+# Core (Python 3.11+ required)
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
