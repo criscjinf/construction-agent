@@ -201,6 +201,66 @@ Phase 3 can now:
 
 ---
 
+## [2026-05-06 — 18:15] — Phase 4 Complete: Agent Framework with Claude API Integration
+
+### Implementation
+**Files Created** (1,119 lines):
+- `src/agent/tools.py` — Tool definitions with Pydantic models and JSON schemas
+- `src/agent/core.py` — Agent orchestrator with Claude SDK and tool execution
+- `src/agent/prompts.py` — System prompt, domain context, example queries
+- `tests/unit/test_agent.py` — 14 tool schema validation tests
+- `tests/integration/test_agent_e2e.py` — 17 end-to-end agent query tests
+
+### Quality Metrics
+- **Tests**: 31 new passing (Phase 4) + 99 existing (Phase 1-3) = 130 total
+- **Coverage**: 100% test success rate
+- **Regressions**: 0 (all previous tests still passing)
+- **Tool Definitions**: 4 tools (detect_outliers, aggregate_items, compare_bidders, search)
+
+### Key Achievements
+✅ Tool Definitions: Pydantic models generate JSON schemas for Claude tool_use API
+✅ Agent Loop: Iterative query processing with tool calls and result handling
+✅ Tool Execution: Adapters map tool calls to Python functions with result formatting
+✅ Composable Tools: Support for chaining multiple tools in single response
+✅ Source Citation: Responses ground answers in actual data with explanation
+✅ Domain Prompts: Construction terminology, example queries, handling edge cases
+
+### Architecture Highlights
+- **Tool Definitions**: DetectOutliersInput, AggregateItemsInput, CompareBiddersInput, SearchInput
+- **AgentExecutor**: Manages Claude client, tool calls, result formatting
+- **Tool Adapters**: Map tool inputs to analysis module functions (_tool_detect_outliers, etc)
+- **System Prompt**: 280+ lines of construction domain context with examples
+- **Composability**: Example of "top items + check for outliers" pattern
+
+### Test Coverage Breakdown
+| Component | Tests | Coverage |
+|-----------|-------|----------|
+| Tool Schemas | 14 | JSON schema validation, serialization |
+| Agent Core | 17 | Tool execution, composition, formatting |
+| **TOTAL** | **31** | **100% pass** |
+
+### What This Enables for Phase 5
+- User can run: agent.query("What are the top 5 most expensive items?")
+- Agent chains tools: aggregate_items() → results
+- User can ask: "Are there outliers in these prices?" → detect_outliers() → formatted response
+- Agent cites sources: "Item X costs $Y (from bidder Z on line N)"
+- Complex queries: "Compare bidders AND check for outliers" → multiple tool calls
+
+### Architectural Decisions Made
+1. **Pydantic for Tools**: Type-safe schema generation for Claude API
+2. **Static Methods**: All tool executors are testable pure functions
+3. **Composable Design**: Tools can be chained without modification
+4. **Grounded Responses**: All answers backed by actual data, not hallucination
+5. **Domain Prompts**: Construction context helps Claude make better tool selections
+
+### Integration with Existing Layers
+- **Data Layer** (Phase 1): Projects, BidItems, Bidders already available
+- **Vector Store** (Phase 2): Embeddings ready for semantic search tool
+- **Analysis Layer** (Phase 3): Outliers, aggregations, comparisons ready to call
+- **Agent Layer** (Phase 4): Orchestrates all above via Claude API
+
+---
+
 ## Development Log
 
 Entries added as work progresses:

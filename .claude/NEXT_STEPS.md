@@ -54,27 +54,34 @@
 - Bidder-to-item comparisons with variance analysis
 - Competitive item ranking by coefficient of variation
 
-## 🎯 Immediate Next (Phase 4)
+## ✅ Completed (Phase 4)
 
-7. **Phase 4: Agent + Tools** ← START HERE
-   - [ ] `src/agent/tools.py`: Tool definitions (Pydantic models for Claude tool-use)
-   - [ ] `src/agent/core.py`: Agent orchestrator (Claude SDK, tool calling)
-   - [ ] `src/agent/prompts.py`: System prompt + examples
-   - [ ] `tests/unit/test_agent.py`: Tool definition tests
-   - [ ] `tests/integration/test_agent_e2e.py`: End-to-end agent queries
+7. ✓ **Phase 4: Agent + Tools**
+   - ✓ `src/agent/tools.py`: Tool definitions (DetectOutliersInput, AggregateItemsInput, CompareBiddersInput, SearchInput)
+   - ✓ `src/agent/core.py`: Agent orchestrator (Claude SDK integration, tool calling, result formatting)
+   - ✓ `src/agent/prompts.py`: System prompt with domain context + 7 example queries
+   - ✓ `tests/unit/test_agent.py`: 14 tool schema validation tests
+   - ✓ `tests/integration/test_agent_e2e.py`: 17 end-to-end agent query tests
+
+**Metrics**: 31 new tests passing | 130 total tests | 0 regressions
+**Key Features**:
+- Tool schemas compatible with Anthropic tool_use API
+- Agent query loop with iterative tool calling
+- Tool composition support (chain multiple tools in one response)
+- Grounded responses with source citations
+- Construction domain prompts with example queries
+
+## 🎯 Immediate Next (Phase 5)
+
+8. **Phase 5: Polish & Submission** ← START HERE
+   - [ ] `src/main.py`: CLI entry point (query loop, file loading, output formatting)
+   - [ ] `README.md`: Setup instructions (<5min from clone), examples, architecture decisions
+   - [ ] Coverage report & verification (target >80%)
+   - [ ] `/security` audit (OWASP compliance)
+   - [ ] `.env.example` file for API keys
+   - [ ] Final commit to feature branch & PR review
    
-   **Time**: ~45 min | **Success**: Agent can call analysis tools, cite sources, compose queries
-
-7. **Phase 4: Agent + Tools**
-   - [ ] `src/agent/tools.py`: Tool definitions (Pydantic models)
-   - [ ] `src/agent/core.py`: Agent orchestrator (Claude SDK)
-   - [ ] `src/agent/prompts.py`: System prompt + examples
-
-8. **Phase 5: Polish**
-   - [ ] `src/main.py`: CLI entry point
-   - [ ] `README.md`: Setup instructions (must be <5min from clone)
-   - [ ] Full test suite + coverage report
-   - [ ] `/security` audit
+   **Time**: ~40 min | **Success**: Project ready for submission with clean documentation
 
 ## 📋 Example Queries to Test (End-to-End)
 
