@@ -48,11 +48,12 @@ def main():
         db_path = f.name
 
     try:
-        vector_store = SQLiteVectorStore(db_path=db_path)
-        print("   ⏳ Indexing bid items in vector store (this may take a moment)...")
+        # Use vector store without indexing to avoid OpenAI API calls
+        vector_store = None  # Disable vector store to avoid OpenAI
         agent = AgentExecutor(projects=projects, vector_store=vector_store)
         print(f"✅ Agent ready with {len(agent.tools)} tools")
-        print(f"✅ Vector store indexed: {vector_store.count()} items")
+        print(f"✅ Search tool disabled (no OpenAI quota)")
+        print(f"   Available: Top Items, Outlier Detection, Bidder Comparison")
     except KeyboardInterrupt:
         print("\n❌ Initialization interrupted by user")
         sys.exit(1)

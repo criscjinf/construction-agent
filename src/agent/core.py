@@ -301,14 +301,15 @@ Top {inp.limit} {order_label} items by {inp.metric}:
         """Index bid items from projects into vector store for semantic search."""
         try:
             # Try to use real EmbeddingClient, fallback to Mock if API unavailable
+            embedding_client = None
             try:
                 embedding_client = EmbeddingClient()
-            except (ValueError, Exception) as e:
-                logger.warning(f"OpenAI API unavailable ({type(e).__name__}), using MockEmbeddingClient")
+                logger.info("Using OpenAI embeddings")
+            except Exception as e:
+                logger.warning(f"OpenAI API unavailable: {e}. Using MockEmbeddingClient instead.")
                 embedding_client = MockEmbeddingClient()
 
             count = 0
-
             for project in self.projects:
                 # Index each bid item
                 for item in project.items:
@@ -330,7 +331,8 @@ Top {inp.limit} {order_label} items by {inp.metric}:
                         )
                         count += 1
                     except Exception as e:
-                        logger.warning(f"Failed to embed item {doc_id}: {e}")
+                        logger.debug(f"Failed to embed item {doc_id}: {e}")
+                        continue
 
             logger.info(f"Indexed {count} bid items in vector store")
 
