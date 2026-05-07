@@ -88,7 +88,62 @@ Phase 2: Vector Store — Generate OpenAI embeddings, store in SQLite, implement
 
 ---
 
-## Development Log (to be updated)
+## [2026-05-06 — 17:15] — Phase 2 Complete: Vector Store and Embeddings
+
+### Implementation
+**Files Created** (1,036 lines):
+- `src/vectorstore/embeddings.py` — OpenAI wrapper + MockEmbeddingClient (deterministic for tests)
+- `src/vectorstore/storage.py` — SQLiteVectorStore with Repository pattern (CRUD + similarity search)
+- `src/vectorstore/retrieval.py` — HybridRetriever (semantic + keyword fusion)
+- `tests/unit/test_embeddings.py` — 9 embedding tests (dimensions, batch processing, determinism)
+- `tests/integration/test_vectorstore.py` — 13 storage tests (CRUD, threshold, metadata)
+- `tests/integration/test_retrieval.py` — 12 retrieval tests (hybrid search, weights)
+
+### Quality Metrics
+- **Tests**: 34 new passing (Phase 2) + 47 existing (Phase 1) = 81 total
+- **Coverage**: 100% test success rate
+- **Regressions**: 0 (all Phase 1 tests still passing)
+- **New Test Classes**: 5 (EmbeddingClient, VectorStore, Retriever, Weights)
+
+### Key Achievements
+✅ Repository Pattern: Abstract VectorStore allows SQLite ↔ Pinecone swap
+✅ Mock Embeddings: Deterministic test embeddings (no real API calls)
+✅ Hybrid Search: Configurable semantic (0.7) + keyword (0.3) weights
+✅ Cosine Similarity: Proper vector math for embedding distance
+✅ Metadata Preservation: All document metadata stored and retrieved
+✅ Threshold Filtering: Control result quality by similarity threshold
+
+### Architecture Highlights
+- EmbeddingClient: Real OpenAI wrapper (+ MockEmbeddingClient for tests)
+- SQLiteVectorStore: Full CRUD, insert/search/delete/clear/count
+- HybridRetriever: Composes store + embeddings, supports semantic-only/keyword-only
+- Cosine similarity correctly normalized
+
+### Test Coverage Breakdown
+| Component | Tests | Coverage |
+|-----------|-------|----------|
+| Embeddings | 9 | Determinism, batch, dimensions |
+| VectorStore | 13 | CRUD, search, threshold, metadata |
+| Retrieval | 12 | Hybrid, weights, composition |
+| **TOTAL** | **34** | **100% pass** |
+
+### What This Enables
+Phase 3 can now:
+- Generate embeddings for bid items (via EmbeddingClient)
+- Store vectors in SQLite (via VectorStore)
+- Retrieve relevant items by semantic similarity (via HybridRetriever)
+- Answer questions like "What does the plan say about drainage?" (semantic search on PDF chunks)
+- Answer questions like "Top 5 expensive items?" (keyword + aggregation)
+
+### Architectural Decisions Made
+1. **SQLite for Phase 2**: Fast iteration, no external service, swappable backend
+2. **MockEmbeddingClient**: Deterministic hash-based embeddings for testing
+3. **Hybrid Scoring**: 70% semantic + 30% keyword (configurable per-retriever)
+4. **Repository Pattern**: Enables swapping to Pinecone/Weaviate in Phase 5+ without touching agent
+
+---
+
+## Development Log
 
 Entries added as work progresses:
 - When completing each phase ✓
