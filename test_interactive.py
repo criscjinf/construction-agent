@@ -44,10 +44,20 @@ def main():
         db_path = f.name
 
     try:
+        # Use vector store WITHOUT indexing (faster startup)
         vector_store = SQLiteVectorStore(db_path=db_path)
-        agent = AgentExecutor(projects=projects, vector_store=vector_store)
+
+        # Create agent with vector_store=None for instant startup
+        # This disables search tool but keeps other 3 tools working
+        agent = AgentExecutor(projects=projects, vector_store=None)
         print(f"✅ Agent ready with {len(agent.tools)} tools")
-        print(f"✅ Vector store indexed: {vector_store.count()} items")
+        print("   Note: Search tool disabled (no indexing). Use other 3 tools:")
+        print("     • Top Items (aggregation)")
+        print("     • Outlier Detection")
+        print("     • Bidder Comparison")
+    except KeyboardInterrupt:
+        print("\n❌ Initialization interrupted by user")
+        sys.exit(1)
     except Exception as e:
         print(f"❌ Error initializing agent: {e}")
         sys.exit(1)
@@ -197,13 +207,20 @@ def _process_query(agent: AgentExecutor, query: str) -> None:
 
     else:
         # Default: semantic search
-        print("\n🔧 Tool: Semantic Search")
-        result = agent._tool_search({
-            "query": query,
-            "limit": 5,
-            "threshold": 0.0
-        })
-        print(result)
+        if agent.vector_store:
+            print("\n🔧 Tool: Semantic Search")
+            result = agent._tool_search({
+                "query": query,
+                "limit": 5,
+                "threshold": 0.0
+            })
+            print(result)
+        else:
+            print("\n⚠️  Search tool not available (vector store disabled for faster startup)")
+            print("   Try these instead:")
+            print("     • 'top items'")
+            print("     • 'check for outliers'")
+            print("     • 'compare mobilization'")
 
 
 if __name__ == "__main__":
