@@ -178,8 +178,5 @@ class HybridRetriever:
         return fused
 
     def _get_all_doc_ids(self) -> list[str]:
-        """Get all document IDs in store (workaround for lack of list method)."""
-        # This is a limitation: VectorStore doesn't expose all doc IDs
-        # In a production system, we'd add a method to VectorStore
-        # For now, we'll accept this limitation
-        return []
+        """Get all document IDs in store."""
+        return self.vector_store.get_all_doc_ids()

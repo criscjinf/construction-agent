@@ -137,7 +137,7 @@ def analyze(ctx, file: Optional[str], query: Optional[str], vector_store: str):
 
         # Initialize vector store (for semantic search)
         try:
-            vs = SQLiteVectorStore(database_url=f"sqlite:///{vector_store}")
+            vs = SQLiteVectorStore(db_path=vector_store)
         except Exception as e:
             click.echo(f"⚠️  Vector store unavailable: {e}", err=True)
             vs = None
