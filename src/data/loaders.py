@@ -10,6 +10,7 @@ from typing import Optional
 
 from src.data.models import Project
 from src.data.parsers import BaseParser, CSVParser
+from src.data.pdf_parser import PDFParser
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class DataLoader:
     # Map extensions to parser classes
     PARSER_MAP = {
         ".csv": CSVParser,
-        # ".pdf": PDFParser,  # To be implemented in Phase 2
+        ".pdf": PDFParser,
         # ".json": JSONParser,  # Future
     }
 

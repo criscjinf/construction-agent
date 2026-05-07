@@ -14,6 +14,7 @@ from anthropic import Anthropic
 
 from src.data.models import Project
 from src.data.loaders import DataLoader
+from src.vectorstore.embeddings import EmbeddingClient
 from src.vectorstore.retrieval import HybridRetriever
 from src.vectorstore.storage import SQLiteVectorStore
 from src.analysis.outliers import OutlierDetector, OutlierMethod, detect_price_outliers
@@ -46,6 +47,10 @@ class AgentExecutor:
         self.vector_store = vector_store
         self.model = model
         self.tools = get_tool_definitions()
+
+        # Index projects in vector store for semantic search
+        if self.vector_store:
+            self._index_projects_in_vector_store()
 
     def query(self, user_message: str, max_iterations: int = 5) -> str:
         """
@@ -268,13 +273,52 @@ Top {inp.limit} {order_label} items by {inp.metric}:
             return f"No results found for: {inp.query}"
 
         result_strs = [f"Found {len(results)} results for: {inp.query}\n"]
-        for i, (content, metadata, score) in enumerate(results, 1):
-            source = metadata.get("source", "unknown")
+        for i, (doc_id, score, metadata) in enumerate(results, 1):
+            doc = self.vector_store.get_by_id(doc_id)
+            if not doc:
+                continue
+
+            content = doc.get("text", "")
+            source = metadata.get("source", doc_id)
             result_strs.append(
                 f"{i}. [{source}] (similarity: {score:.2f})\n{content[:200]}..."
             )
 
         return "\n".join(result_strs)
+
+    def _index_projects_in_vector_store(self) -> None:
+        """Index bid items from projects into vector store for semantic search."""
+        try:
+            embedding_client = EmbeddingClient()
+            count = 0
+
+            for project in self.projects:
+                # Index each bid item
+                for item in project.items:
+                    doc_id = f"{project.proj_id}_{item.item_no}"
+                    text = f"{item.item_desc} - {item.unit} @ ${item.unit_price:.2f}"
+
+                    try:
+                        embedding = embedding_client.embed_text(text)
+                        self.vector_store.insert(
+                            doc_id=doc_id,
+                            text=text,
+                            embedding=embedding,
+                            metadata={
+                                "proj_id": project.proj_id,
+                                "item_no": item.item_desc,
+                                "unit_price": item.unit_price,
+                                "source": "bid_items",
+                            }
+                        )
+                        count += 1
+                    except Exception as e:
+                        logger.warning(f"Failed to embed item {doc_id}: {e}")
+
+            logger.info(f"Indexed {count} bid items in vector store")
+
+        except Exception as e:
+            logger.error(f"Failed to index projects in vector store: {e}")
 
     def _get_system_prompt(self) -> str:
         """Return system prompt for agent."""
