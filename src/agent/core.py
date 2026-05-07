@@ -46,7 +46,15 @@ class AgentExecutor:
         # Get API key from environment
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY not set in environment")
+            error_msg = (
+                "❌ ANTHROPIC_API_KEY not configured\n\n"
+                "To use the Claude Agent mode, you need:\n"
+                "  1. Configure ANTHROPIC_API_KEY in .env file\n"
+                "  2. Ensure you have active credits on https://console.anthropic.com\n\n"
+                "💡 Alternative: Use the fast mode without API:\n"
+                "   $ python3 test_interactive.py"
+            )
+            raise ValueError(error_msg)
 
         self.client = Anthropic(api_key=api_key)
         self.projects = projects

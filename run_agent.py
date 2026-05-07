@@ -57,10 +57,22 @@ def main():
     except KeyboardInterrupt:
         print("\n❌ Initialization interrupted by user")
         sys.exit(1)
+    except ValueError as e:
+        # Handle configuration errors gracefully
+        print(f"\n{str(e)}\n")
+        sys.exit(1)
     except Exception as e:
-        print(f"❌ Error initializing agent: {e}")
-        import traceback
-        traceback.print_exc()
+        error_str = str(e)
+        if "credit" in error_str.lower() or "quota" in error_str.lower():
+            print(f"\n⚠️  API INITIALIZATION ERROR\n")
+            print(f"❌ {error_str}\n")
+            print("💡 Your API credits may be exhausted.\n")
+            print("✅ Use the alternative mode:")
+            print("   $ python3 test_interactive.py\n")
+        else:
+            print(f"❌ Error initializing agent: {e}")
+            import traceback
+            traceback.print_exc()
         sys.exit(1)
 
     # Interactive conversation loop
@@ -138,9 +150,27 @@ def main():
             except KeyboardInterrupt:
                 print("\n❌ Query interrupted by user\n")
             except Exception as e:
-                print(f"❌ Error: {e}\n")
-                import traceback
-                traceback.print_exc()
+                error_str = str(e)
+
+                # Handle API quota/credit errors gracefully
+                if "credit balance" in error_str.lower() or "quota" in error_str.lower():
+                    print("\n" + "=" * 90)
+                    print("⚠️  API CREDIT/QUOTA EXHAUSTED")
+                    print("=" * 90)
+                    print("\n❌ Your API credits or quotas have been exceeded.")
+                    print("\n📝 To use this mode, you need to:")
+                    print("   1. Upgrade your OpenAI plan (for embeddings)")
+                    print("   2. Upgrade your Anthropic plan (for Claude)")
+                    print("\n✅ Alternative: Use the fast mode without API:")
+                    print("   $ python3 test_interactive.py")
+                    print("\n   This provides 3 fully functional tools:")
+                    print("   • Top Items (aggregation)")
+                    print("   • Outlier Detection")
+                    print("   • Bidder Comparison")
+                    print("\n" + "=" * 90 + "\n")
+                    break
+                else:
+                    print(f"❌ Error: {e}\n")
 
         except KeyboardInterrupt:
             print("\n\n👋 Goodbye!\n")
