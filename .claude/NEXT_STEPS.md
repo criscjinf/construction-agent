@@ -1,31 +1,46 @@
 # Next Steps
 
-## 🎯 Immediate (Next Session)
+## ✅ Completed
 
-1. **Create project structure** (`/feature` or manual)
-   - `mkdir -p src/{data,vectorstore,analysis,agent}`
-   - `mkdir -p tests/{unit,integration,fixtures}`
+1. ✓ **Create project structure**
+   - ✓ `mkdir -p src/{data,vectorstore,analysis,agent}`
+   - ✓ `mkdir -p tests/{unit,integration,fixtures}`
 
-2. **Phase 1: Data Models + CSV Parser**
-   - [ ] `src/data/models.py`: Pydantic models (Project, BidItem, Bidder)
-   - [ ] `src/data/parsers.py`: CSVParser with schema inference
-   - [ ] `src/data/validators.py`: Data quality checks
-   - [ ] `tests/unit/test_parsers.py`: Schema inference tests
+2. ✓ **Phase 1: Data Models + CSV Parser**
+   - ✓ `src/data/models.py`: Pydantic models (Project, BidItem, Bidder, PDFContent)
+   - ✓ `src/data/parsers.py`: CSVParser with schema inference
+   - ✓ `src/data/loaders.py`: DataLoader factory
+   - ✓ `src/data/validators.py`: Data quality checks
+   - ✓ `tests/unit/test_parsers.py`: 22 tests (schema inference, edge cases, integration)
+   - ✓ `tests/unit/test_models.py`: 14 model tests
+   - ✓ `tests/unit/test_validators.py`: 11 validator tests
+   - ✓ `tests/fixtures/sample_data.py`: Test fixtures
 
-3. **Test against sample_bid_tabulation.csv**
-   - Load CSV
-   - Infer schema (detect columns dynamically)
-   - Parse all rows
-   - Verify no errors on edge cases (missing cols, empty cells)
+3. ✓ **Test against sample_bid_tabulation.csv**
+   - ✓ Load CSV (auto-detected all columns)
+   - ✓ Infer schema (handles missing/renamed columns)
+   - ✓ Parse all rows without errors
+   - ✓ Verify edge cases (empty cells, multiple projects, inconsistent types)
 
-4. **Checkpoint**: Can parse CSV with variable schema ✓
+4. ✓ **Checkpoint**: Can parse CSV with variable schema
 
-## 🔄 Short Term (Same Session)
+**Metrics**: 47 tests passing | 89% coverage | Real data parsing ✓
 
-5. **Phase 2: Vector Store**
-   - [ ] `src/vectorstore/embeddings.py`: OpenAI wrapper
-   - [ ] `src/vectorstore/storage.py`: SQLite storage + search
-   - [ ] `tests/integration/test_retrieval.py`: Search tests
+## 🎯 Immediate Next (Phase 2)
+
+5. **Phase 2: Vector Store** ← START HERE
+   - [ ] `src/vectorstore/embeddings.py`: OpenAI API wrapper (text-embedding-3-small)
+   - [ ] `src/vectorstore/storage.py`: SQLite vector storage + hybrid search
+   - [ ] `tests/integration/test_retrieval.py`: Semantic + keyword search tests
+   
+   **Time**: ~40 min | **Success**: Store embeddings, retrieve by similarity
+
+## 🔄 Short Term (Later in Session)
+
+6. **Phase 3: Analysis Tools** ← AFTER Phase 2
+   - [ ] `src/analysis/outliers.py`: Z-score + IQR detection
+   - [ ] `src/analysis/aggregations.py`: Top items, stats
+   - [ ] `tests/unit/test_outliers.py`: Edge case tests
    
 6. **Phase 3: Analysis Tools**
    - [ ] `src/analysis/outliers.py`: Z-score + IQR
