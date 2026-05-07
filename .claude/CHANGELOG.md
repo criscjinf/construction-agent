@@ -143,6 +143,64 @@ Phase 3 can now:
 
 ---
 
+## [2026-05-06 — 17:45] — Phase 3 Complete: Analysis Tools (Outliers, Aggregations, Comparisons)
+
+### Implementation
+**Files Created** (611 lines):
+- `src/analysis/outliers.py` — Outlier detection (Z-score + IQR methods)
+- `src/analysis/aggregations.py` — Statistics, top items, grouping
+- `src/analysis/comparisons.py` — Bidder/item analysis and rankings
+- `tests/unit/test_analysis.py` — 18 comprehensive tests covering all edge cases
+
+### Quality Metrics
+- **Tests**: 18 new passing (Phase 3) + 81 existing (Phase 1-2) = 99 total
+- **Coverage**: 100% test success rate
+- **Regressions**: 0 (all previous tests still passing)
+- **Test Classes**: 5 (TestOutlierDetectionZScore, TestOutlierDetectionIQR, TestAggregationService, TestComparisonService, TestPriceOutliersConvenience)
+
+### Key Achievements
+✅ Outlier Detection: Z-score (configurable threshold) + IQR (1.5x multiplier) methods
+✅ Edge Cases: Handles empty lists, single values, all equal values gracefully
+✅ Statistical Analysis: Mean, median, stdev, min/max, percentile calculations
+✅ Item Aggregation: Top-N by any metric (unit_price, qty, ext_amt)
+✅ Bidder Comparisons: Price variance analysis, competitive item ranking
+✅ Composable Operations: Each module independent, ready for agent integration
+
+### Architecture Highlights
+- **Outlier**: Simple data class with value, index, zscore, percentile, description
+- **OutlierDetector**: Static methods for Z-score and IQR detection
+- **BidStatistics**: Encapsulates count, mean, median, stdev, min, max
+- **AggregationService**: Static methods for aggregation operations
+- **BidderComparison**: Bidder analysis with variance calculation
+- **ComparisonService**: Bidder/item comparison operations
+
+### Test Coverage Breakdown
+| Component | Tests | Coverage |
+|-----------|-------|----------|
+| Outlier Detection (Z-score) | 6 | Outliers, no outliers, equal values, single/empty |
+| Outlier Detection (IQR) | 3 | Outliers, no outliers, equal values |
+| Aggregations | 5 | Top items, statistics, item stats, project summary |
+| Comparisons | 3 | Bidder comparison, analysis, all bidders |
+| Integration | 1 | Price outliers convenience function |
+| **TOTAL** | **18** | **100% pass** |
+
+### What This Enables for Phase 4
+- Agent can call: detect_outliers(prices, method="zscore", sensitivity=2.0)
+- Agent can call: get_top_items(projects, metric="unit_price", limit=5)
+- Agent can call: compare_bidders_on_item(project, item_no)
+- Agent can answer: "Are there suspicious prices?" → uses outlier detection
+- Agent can answer: "What items have most competition?" → uses variance analysis
+- Agent can compose: "Top expensive items AND check for outliers" → chains tools
+
+### Architectural Decisions Made
+1. **Static Methods**: All services use static methods for stateless, testable operations
+2. **Simple Data Classes**: Outlier, BidStatistics, BidderComparison are minimal wrappers
+3. **No Persistence**: All operations are pure functions (input → output)
+4. **Sensitivity as Parameter**: OutlierDetector respects configurable thresholds
+5. **Graceful Degradation**: Edge cases return empty results, never crash
+
+---
+
 ## Development Log
 
 Entries added as work progresses:

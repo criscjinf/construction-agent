@@ -38,20 +38,32 @@
 
 **Metrics**: 34 new tests passing | 81 total tests | 0 regressions
 
-## 🎯 Immediate Next (Phase 3)
+## ✅ Completed (Phase 3)
 
-6. **Phase 3: Analysis Tools** ← START HERE
-   - [ ] `src/analysis/outliers.py`: Z-score + IQR detection
-   - [ ] `src/analysis/aggregations.py`: Top items, statistics, summaries
-   - [ ] `src/analysis/comparisons.py`: Bidder/item comparisons
-   - [ ] `tests/unit/test_analysis.py`: Edge case tests (all equal, single value, etc)
+6. ✓ **Phase 3: Analysis Tools**
+   - ✓ `src/analysis/outliers.py`: Z-score + IQR detection (Outlier, OutlierDetector, OutlierMethod)
+   - ✓ `src/analysis/aggregations.py`: Top items, statistics, summaries (BidStatistics, AggregationService)
+   - ✓ `src/analysis/comparisons.py`: Bidder/item comparisons (BidderComparison, ComparisonService)
+   - ✓ `tests/unit/test_analysis.py`: 18 edge case tests (all equal, single value, empty, Z-score, IQR)
+
+**Metrics**: 18 new tests passing | 99 total tests | 0 regressions
+**Key Features**: 
+- Z-score & IQR outlier detection with configurable sensitivity
+- Top-N items by metric (unit_price, qty, ext_amt)
+- Statistics computation (mean, median, stdev, min/max)
+- Bidder-to-item comparisons with variance analysis
+- Competitive item ranking by coefficient of variation
+
+## 🎯 Immediate Next (Phase 4)
+
+7. **Phase 4: Agent + Tools** ← START HERE
+   - [ ] `src/agent/tools.py`: Tool definitions (Pydantic models for Claude tool-use)
+   - [ ] `src/agent/core.py`: Agent orchestrator (Claude SDK, tool calling)
+   - [ ] `src/agent/prompts.py`: System prompt + examples
+   - [ ] `tests/unit/test_agent.py`: Tool definition tests
+   - [ ] `tests/integration/test_agent_e2e.py`: End-to-end agent queries
    
-   **Time**: ~35 min | **Success**: Detect outliers, compute stats, enable agent queries
-   
-6. **Phase 3: Analysis Tools**
-   - [ ] `src/analysis/outliers.py`: Z-score + IQR
-   - [ ] `src/analysis/aggregations.py`: Top items, stats
-   - [ ] `tests/unit/test_outliers.py`: Edge case tests
+   **Time**: ~45 min | **Success**: Agent can call analysis tools, cite sources, compose queries
 
 7. **Phase 4: Agent + Tools**
    - [ ] `src/agent/tools.py`: Tool definitions (Pydantic models)
