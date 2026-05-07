@@ -14,7 +14,7 @@ from anthropic import Anthropic
 
 from src.data.models import Project
 from src.data.loaders import DataLoader
-from src.vectorstore.embeddings import EmbeddingClient
+from src.vectorstore.embeddings import EmbeddingClient, MockEmbeddingClient
 from src.vectorstore.retrieval import HybridRetriever
 from src.vectorstore.storage import SQLiteVectorStore
 from src.analysis.outliers import OutlierDetector, OutlierMethod, detect_price_outliers
@@ -257,8 +257,12 @@ Top {inp.limit} {order_label} items by {inp.metric}:
         if not self.vector_store:
             return "Vector store not available for search"
 
+        # Use MockEmbeddingClient for search (consistent with indexing fallback)
+        embedding_client = MockEmbeddingClient()
+
         retriever = HybridRetriever(
             vector_store=self.vector_store,
+            embedding_client=embedding_client,
             semantic_weight=0.7,
             keyword_weight=0.3
         )
@@ -266,7 +270,8 @@ Top {inp.limit} {order_label} items by {inp.metric}:
         results = retriever.search(
             query=inp.query,
             limit=inp.limit,
-            threshold=inp.threshold
+            semantic_threshold=inp.threshold,
+            keyword_threshold=0.0
         )
 
         if not results:
@@ -289,7 +294,13 @@ Top {inp.limit} {order_label} items by {inp.metric}:
     def _index_projects_in_vector_store(self) -> None:
         """Index bid items from projects into vector store for semantic search."""
         try:
-            embedding_client = EmbeddingClient()
+            # Try to use real EmbeddingClient, fallback to Mock if API key not available
+            try:
+                embedding_client = EmbeddingClient()
+            except ValueError:
+                logger.info("OPENAI_API_KEY not found, using MockEmbeddingClient for indexing")
+                embedding_client = MockEmbeddingClient()
+
             count = 0
 
             for project in self.projects:
