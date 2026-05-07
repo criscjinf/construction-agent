@@ -52,6 +52,11 @@ class VectorStore(ABC):
         """Get total number of documents."""
         pass
 
+    @abstractmethod
+    def get_all_doc_ids(self) -> list[str]:
+        """Get all document IDs in store."""
+        pass
+
 
 class SQLiteVectorStore(VectorStore):
     """SQLite-based vector store implementation."""
@@ -218,6 +223,18 @@ class SQLiteVectorStore(VectorStore):
 
         except Exception as e:
             logger.error(f"Failed to count documents: {e}")
+            raise
+
+    def get_all_doc_ids(self) -> list[str]:
+        """Get all document IDs in store."""
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT doc_id FROM documents")
+                return [row[0] for row in cursor.fetchall()]
+
+        except Exception as e:
+            logger.error(f"Failed to get all doc IDs: {e}")
             raise
 
     @staticmethod
