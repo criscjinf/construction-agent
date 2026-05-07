@@ -9,6 +9,7 @@ AgentExecutor:
 """
 
 import logging
+import os
 from typing import Optional
 from anthropic import Anthropic
 
@@ -42,7 +43,12 @@ class AgentExecutor:
             vector_store: Vector store for semantic search (optional)
             model: Claude model to use
         """
-        self.client = Anthropic()
+        # Get API key from environment
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY not set in environment")
+
+        self.client = Anthropic(api_key=api_key)
         self.projects = projects
         self.vector_store = vector_store
         self.model = model
@@ -294,11 +300,11 @@ Top {inp.limit} {order_label} items by {inp.metric}:
     def _index_projects_in_vector_store(self) -> None:
         """Index bid items from projects into vector store for semantic search."""
         try:
-            # Try to use real EmbeddingClient, fallback to Mock if API key not available
+            # Try to use real EmbeddingClient, fallback to Mock if API unavailable
             try:
                 embedding_client = EmbeddingClient()
-            except ValueError:
-                logger.info("OPENAI_API_KEY not found, using MockEmbeddingClient for indexing")
+            except (ValueError, Exception) as e:
+                logger.warning(f"OpenAI API unavailable ({type(e).__name__}), using MockEmbeddingClient")
                 embedding_client = MockEmbeddingClient()
 
             count = 0
