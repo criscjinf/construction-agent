@@ -73,6 +73,60 @@ class TestDetectOutliersSchema:
         assert "100" in json_str
         assert "zscore" in json_str
 
+    def test_detect_outliers_output_valid(self):
+        """Test valid outlier detection output."""
+        out = DetectOutliersOutput(
+            count=100,
+            mean=500.0,
+            median=480.0,
+            stdev=150.0,
+            outlier_count=3,
+            outliers=[
+                {"value": 1500, "zscore": 6.7, "percentile": 99.5, "description": "3.2σ above mean"},
+                {"value": 50, "zscore": -3.0, "percentile": 0.5, "description": "2.1σ below mean"}
+            ],
+            interpretation="2 high outliers (price anomalies) detected. Recommend bidder review."
+        )
+
+        assert out.count == 100
+        assert out.mean == 500.0
+        assert out.median == 480.0
+        assert out.stdev == 150.0
+        assert out.outlier_count == 3
+        assert len(out.outliers) == 2
+        assert "anomalies" in out.interpretation
+
+    def test_detect_outliers_output_json_schema(self):
+        """Test JSON schema for output."""
+        schema = DetectOutliersOutput.model_json_schema()
+
+        assert "properties" in schema
+        assert "count" in schema["properties"]
+        assert "mean" in schema["properties"]
+        assert "median" in schema["properties"]
+        assert "stdev" in schema["properties"]
+        assert "outlier_count" in schema["properties"]
+        assert "outliers" in schema["properties"]
+        assert "interpretation" in schema["properties"]
+
+    def test_detect_outliers_output_serialization(self):
+        """Test output can be serialized to JSON."""
+        out = DetectOutliersOutput(
+            count=50,
+            mean=1000.0,
+            median=950.0,
+            stdev=200.0,
+            outlier_count=2,
+            outliers=[{"value": 3000, "zscore": 10.0, "percentile": 99.9, "description": "High"}],
+            interpretation="Data looks normal"
+        )
+
+        json_str = out.model_dump_json()
+        assert "count" in json_str
+        assert "50" in json_str
+        assert "1000" in json_str
+        assert "Data looks normal" in json_str
+
 
 class TestAggregateItemsSchema:
     """Tests for aggregation tool schema."""
