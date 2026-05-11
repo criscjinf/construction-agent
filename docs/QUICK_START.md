@@ -1,28 +1,28 @@
 # 🚀 Quick Start - Construction Estimating Agent
 
-## ⚡ TL;DR (30 segundos)
+## ⚡ TL;DR (30 seconds)
 
 ```bash
 python3 scripts/run_agent.py
-# → Escolha opção 2 (load from data/)
-# → Faça perguntas
+# → Choose option 2 (load from data/)
+# → Ask questions
 ```
 
 ---
 
-## 📋 Visão Geral
+## 📋 Overview
 
-O agente oferece **um único comando** que faz tudo:
-- ✅ Upload de CSV/PDF
-- ✅ Indexação automática (embeddings)
-- ✅ Pesquisa semântica
-- ✅ Análise com Claude
+The agent provides **a single command** that does everything:
+- ✅ Upload CSV/PDF files
+- ✅ Automatic indexing (embeddings)
+- ✅ Semantic search
+- ✅ Analysis with Claude
 
 ---
 
-## 🎯 Fluxo Completo
+## 🎯 Complete Workflow
 
-### **Opção 1: Usar dados já em `data/` (RECOMENDADO)**
+### **Option 1: Use existing data in `data/` (RECOMMENDED)**
 
 ```bash
 python3 scripts/run_agent.py
@@ -33,14 +33,14 @@ Menu:
 👉 Choose (1-3): 2
 ```
 
-Resultado:
+Result:
 ```
 ✅ Documents ready for indexing: 4
 📊 Indexing...
 ✅ Agent ready with 4 tools
 ```
 
-### **Opção 2: Fazer upload de novos arquivos**
+### **Option 2: Upload new files**
 
 ```bash
 python3 scripts/run_agent.py
@@ -56,15 +56,15 @@ Options:
   2. Start analysis
 
 👉 Choose (1-2): 1
-📂 Enter file path: /path/to/seu_arquivo.csv
-✅ Uploaded: seu_arquivo.csv
+📂 Enter file path: /path/to/your_file.csv
+✅ Uploaded: your_file.csv
    Detected type: CSV
    ✅ CSV parsed: 2 projects
 
 👉 Choose (1-2): 2
 ```
 
-### **Opção 3: Upload + dados existentes**
+### **Option 3: Upload + use existing data**
 
 ```bash
 python3 scripts/run_agent.py
@@ -73,14 +73,14 @@ python3 scripts/run_agent.py
 Menu:
 ```
 👉 Choose (1-3): 3
-[Faz upload E carrega data/ simultaneamente]
+[Uploads new files AND loads existing data/ simultaneously]
 ```
 
 ---
 
-## 💬 Fazendo Perguntas
+## 💬 Asking Questions
 
-Após escolher opção, você conversa assim:
+After choosing an option, you interact like this:
 
 ```
 📍 You: What are the top 5 most expensive items?
@@ -114,15 +114,15 @@ Based on the plan documents, the drainage system includes:
 
 ---
 
-## 📊 Formatos Suportados
+## 📊 Supported Formats
 
 ### CSV (Bid Tabulation)
-- ✅ Qualquer estrutura de coluna
-- ✅ Nomes podem variar (UNIT_PRICE, unit_price, estimate_price, etc)
-- ✅ Campos vazios são tolerados
-- ✅ Múltiplos projetos em um arquivo
+- ✅ Any column structure
+- ✅ Column names can vary (UNIT_PRICE, unit_price, estimate_price, etc)
+- ✅ Empty fields are tolerated
+- ✅ Multiple projects in one file
 
-**Exemplo esperado:**
+**Expected example:**
 ```
 PROJ_ID, ITEM_NO, ITEM_DESC, QUANTITY, UNIT_PRICE, BIDDER
 P001, 1031000, MOBILIZATION, 1, 33950.00, Company A
@@ -130,17 +130,17 @@ P001, 1040000, TRAFFIC CONTROL, 2500, 15.50, Company A
 ```
 
 ### PDF (Plans & Specifications)
-- ✅ PDFs com texto nativo (PyPDF2)
-- ✅ PDFs scaneados com OCR
-- ✅ Até 100MB por arquivo
-- ✅ Múltiplos documentos
-- ✅ Qualquer conteúdo (drawings, tables, text)
+- ✅ PDFs with native text (PyPDF2)
+- ✅ Scanned PDFs with OCR
+- ✅ Up to 100MB per file
+- ✅ Multiple documents
+- ✅ Any content (drawings, tables, text)
 
 ---
 
-## 🎯 Exemplos de Perguntas
+## 🎯 Example Questions
 
-### Análise de CSV:
+### CSV Analysis:
 ```
 "What are the top 5 most expensive items?"
 "Are there any pricing anomalies?"
@@ -149,7 +149,7 @@ P001, 1040000, TRAFFIC CONTROL, 2500, 15.50, Company A
 "Items with the most bidder competition"
 ```
 
-### Análise de PDF:
+### PDF Analysis:
 ```
 "What does the plan say about drainage?"
 "What are the specification requirements?"
@@ -158,7 +158,7 @@ P001, 1040000, TRAFFIC CONTROL, 2500, 15.50, Company A
 "What utilities are mentioned?"
 ```
 
-### Buscas Semânticas:
+### Semantic Search:
 ```
 "Search for asphalt items"
 "Find all traffic control specifications"
@@ -167,33 +167,33 @@ P001, 1040000, TRAFFIC CONTROL, 2500, 15.50, Company A
 
 ---
 
-## ⚡ Atalhos dentro do programa
+## ⚡ Commands inside the program
 
-| Comando | Efeito |
+| Command | Effect |
 |---------|--------|
-| `help` | Mostra ajuda e exemplos |
-| `examples` | Lista perguntas sugeridas |
-| `quit` | Sai do programa |
+| `help` | Show help and examples |
+| `examples` | List suggested questions |
+| `quit` | Exit the program |
 
 ---
 
-## 🚀 Scripts Disponíveis
+## 🚀 Available Scripts
 
-| Script | Uso | Quando Usar |
-|--------|-----|------------|
-| **`scripts/run_agent.py`** | Upload + indexação + análise | **Sempre! É o principal** |
-| `scripts/demo.py` | Demo automática (sem upload) | Teste rápido, sem interação |
+| Script | Purpose | When to Use |
+|--------|---------|------------|
+| **`scripts/run_agent.py`** | Upload + indexing + analysis | **Always! This is the main one** |
+| `scripts/demo.py` | Automatic demo (no upload) | Quick test, no interaction |
 
 ---
 
-## 📁 Organização de Arquivos
+## 📁 File Organization
 
 ```
-projeto/
+project/
 ├── scripts/
-│   ├── run_agent.py     ⭐ Use este!
-│   └── demo.py          (demo automática)
-├── data/                (seus CSVs e PDFs aqui)
+│   ├── run_agent.py     ⭐ Use this!
+│   └── demo.py          (automatic demo)
+├── data/                (put your CSVs and PDFs here)
 │   ├── sample_bid_tabulation.csv
 │   ├── plans.pdf
 │   └── ...
@@ -211,91 +211,91 @@ projeto/
 
 ## ❓ FAQ
 
-**P: Preciso de créditos para usar?**
-R: Não obrigatório. Upload/indexação são locais. Créditos só são necessários se usar embeddings reais (não mock).
+**Q: Do I need credits to use this?**
+A: Not required. Upload/indexing are local. Credits only needed for real embeddings (not mock).
 
-**P: Meus dados são salvos?**
-R: Não. Cada sessão usa banco temporário deletado ao sair. Para persistência, copie arquivos para `data/`.
+**Q: Are my data saved?**
+A: No. Each session uses a temporary database that is deleted on exit. For persistence, copy files to `data/`.
 
-**P: Quantos documentos posso usar?**
-R: Sem limite técnico (até 100MB cada arquivo).
+**Q: How many documents can I use?**
+A: No technical limit (up to 100MB per file).
 
-**P: Meu CSV tem estrutura diferente?**
-R: Sem problema! Sistema detecta automaticamente colunas.
+**Q: My CSV has a different structure?**
+A: No problem! System auto-detects columns.
 
-**P: Posso usar PDFs escaneados?**
-R: Sim! OCR automático é aplicado.
+**Q: Can I use scanned PDFs?**
+A: Yes! Automatic OCR is applied.
 
-**P: Como adiciono dados permanentemente?**
-R: Copie CSVs/PDFs para a pasta `data/` e carregue com opção 2 ou 3.
+**Q: How do I add data permanently?**
+A: Copy CSVs/PDFs to the `data/` folder and load with option 2 or 3.
 
 ---
 
-## 🔧 Solução de Problemas
+## 🔧 Troubleshooting
 
-### Erro: "File not found"
+### Error: "File not found"
 ```bash
-# Use caminho absoluto
+# Use absolute path
 python3 scripts/run_agent.py
-📂 Enter file path: /home/seu_usuario/Documents/arquivo.csv
+📂 Enter file path: /home/your_user/Documents/file.csv
 ```
 
-### Erro: "Invalid format"
+### Error: "Invalid format"
 ```
-❌ Recebido: .xlsx, .txt, .doc
-✅ Suportado: .csv, .pdf
+❌ Received: .xlsx, .txt, .doc
+✅ Supported: .csv, .pdf
 ```
 
-### Erro: "File too large"
+### Error: "File too large"
 ```
-Limite: 100MB por arquivo
-Solução: Divida em arquivos menores
+Limit: 100MB per file
+Solution: Split into smaller files
 ```
 
 ### API Credits Exhausted
 ```
-Se usar embeddings reais e os créditos acabarem:
-✅ Sistema detecta e usa mock embeddings automaticamente
-✅ Busca continua funcionando (menos precisa)
+If using real embeddings and credits run out:
+✅ System detects and switches to mock embeddings automatically
+✅ Search continues working (less accurate)
 ```
 
 ---
 
-## 🎬 Próximos Passos
+## 🎬 Next Steps
 
-1. **Primeiro uso:**
+1. **First time:**
    ```bash
    cp .env.example .env
-   # (adicione suas API keys se quiser embeddings reais)
+   # (add your API keys if you want real embeddings)
    python3 scripts/run_agent.py
-   # Escolha: 2
+   # Choose: 2
    ```
 
-2. **Com seus dados:**
+2. **With your data:**
    ```bash
-   cp seu_arquivo.csv data/
+   cp your_file.csv data/
    python3 scripts/run_agent.py
-   # Escolha: 2
+   # Choose: 2
    ```
 
-3. **Fazer upload sem salvar:**
+3. **Upload without saving:**
    ```bash
    python3 scripts/run_agent.py
-   # Escolha: 1
+   # Choose: 1
    ```
 
 ---
 
-## 📚 Documentação Adicional
+## 📚 Additional Documentation
 
-- `DEBUGGING.md` — Ativar logs detalhados
-- `EMBEDDINGS.md` — Como funcionam embeddings e busca
-- `SECURITY.md` — Auditoria de segurança
-- `EXAMPLES.md` — Saídas e logs detalhados
+- `DEBUGGING.md` — Enable detailed logs
+- `EMBEDDINGS.md` — How embeddings and search work
+- `SECURITY.md` — Security audit
+- `EXAMPLES.md` — Detailed log outputs
 
 ---
 
-**Pronto para começar?**
+**Ready to get started?**
 ```bash
 python3 scripts/run_agent.py
 ```

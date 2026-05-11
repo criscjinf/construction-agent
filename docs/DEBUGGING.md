@@ -1,37 +1,37 @@
-# 🔍 MODO DEBUG - Logging Detalhado
+# 🔍 DEBUG Mode - Detailed Logging
 
-## O que é?
+## What is it?
 
-Modo DEBUG fornece **logs detalhados** de cada recurso acionado, mostrando:
-- Qual ferramenta está sendo usada
-- Qual arquivo está sendo processado
-- Qual função está sendo executada
-- Onde erros ocorrem exatamente
+DEBUG mode provides **detailed logs** of each resource triggered, showing:
+- Which tool is being used
+- Which file is being processed
+- Which function is executing
+- Where errors occur exactly
 
-## Como Ativar?
+## How to Enable?
 
-### Opção 1: Variável de Ambiente (Recomendado)
+### Option 1: Environment Variable (Recommended)
 
-Edite `.env`:
+Edit `.env`:
 ```env
 LOG_LEVEL=DEBUG
 LOG_FILE=logs/construction_agent.log
 ```
 
-Execute normalmente:
+Run normally:
 ```bash
-python3 run_agent.py
+python3 scripts/run_agent.py
 ```
 
-### Opção 2: Via Linha de Comando
+### Option 2: Via Command Line
 
 ```bash
-LOG_LEVEL=DEBUG python3 run_agent.py
+LOG_LEVEL=DEBUG python3 scripts/run_agent.py
 ```
 
 ---
 
-## Exemplo de Saída em DEBUG Mode
+## Example DEBUG Mode Output
 
 ### Console Output:
 
@@ -60,81 +60,81 @@ LOG_LEVEL=DEBUG python3 run_agent.py
 
 ---
 
-## Níveis de Log
+## Log Levels
 
-Configure `LOG_LEVEL` no `.env`:
+Configure `LOG_LEVEL` in `.env`:
 
-| Nível | Símbolo | Cor | Mostra | Uso |
-|-------|---------|-----|--------|-----|
-| **DEBUG** | 🔍 | Cyan | DEBUG+INFO+WARN+ERROR+CRITICAL | Detalhes completos |
-| **INFO** | ✅ | Green | INFO+WARN+ERROR+CRITICAL | Operações principais |
-| **WARNING** | ⚠️ | Yellow | WARN+ERROR+CRITICAL | Apenas alertas |
-| **ERROR** | ❌ | Red | ERROR+CRITICAL | Apenas erros |
-| **CRITICAL** | 🚨 | Magenta | CRITICAL | Apenas críticos |
-
----
-
-## Quando Usar LOG_LEVEL=DEBUG
-
-### ✅ Use LOG_LEVEL=DEBUG quando:
-
-1. **Debugar erros**
-   - Qual recurso falhou?
-   - Em qual ponto exato?
-
-2. **Entender o fluxo**
-   - Como o sistema processa dados?
-   - Qual caminho o código segue?
-
-3. **Otimizar performance**
-   - Qual operação demora mais?
-   - Onde está o gargalo?
-
-4. **Desenvolvimento**
-   - Adicionar novas features
-   - Modificar comportamento
-
-### ❌ Use LOG_LEVEL=INFO quando:
-
-1. **Produção**
-   - Menos overhead de logging
-   - Saída mais limpa
-
-2. **Usuário final**
-   - Menos ruído no console
-   - Apenas informações importantes
+| Level | Symbol | Color | Shows | Use |
+|-------|--------|-------|-------|-----|
+| **DEBUG** | 🔍 | Cyan | DEBUG+INFO+WARN+ERROR+CRITICAL | Full details |
+| **INFO** | ✅ | Green | INFO+WARN+ERROR+CRITICAL | Main operations |
+| **WARNING** | ⚠️ | Yellow | WARN+ERROR+CRITICAL | Alerts only |
+| **ERROR** | ❌ | Red | ERROR+CRITICAL | Errors only |
+| **CRITICAL** | 🚨 | Magenta | CRITICAL | Critical only |
 
 ---
 
-## Estrutura de Logs
+## When to Use LOG_LEVEL=DEBUG
 
-### Console (com LOG_LEVEL=DEBUG):
+### ✅ Use LOG_LEVEL=DEBUG when:
+
+1. **Debugging errors**
+   - Which resource failed?
+   - At which exact point?
+
+2. **Understanding the flow**
+   - How does the system process data?
+   - Which path does the code take?
+
+3. **Optimizing performance**
+   - Which operation takes longest?
+   - Where is the bottleneck?
+
+4. **Development**
+   - Adding new features
+   - Modifying behavior
+
+### ❌ Use LOG_LEVEL=INFO when:
+
+1. **Production**
+   - Less logging overhead
+   - Cleaner output
+
+2. **End user**
+   - Less noise in console
+   - Only important information
+
+---
+
+## Log Structure
+
+### Console (with LOG_LEVEL=DEBUG):
 
 ```
 timestamp | LEVEL    | module_name        | function_name | message
 2026-05-08 14:32:45 | DEBUG   | document_loader    | load_and_index | Processing file...
 ```
 
-### Arquivo Log:
+### Log File:
 
-Todos os logs são salvos em `logs/construction_agent.log` (inclui DEBUG mesmo se console mostrar INFO)
+All logs are saved to `logs/construction_agent.log` (includes DEBUG even if console shows INFO)
 
 ---
 
-## Configuração no `.env`
+## Configuration in `.env`
 
 ```env
-LOG_LEVEL=DEBUG    # Mostra logs detalhados no console
-LOG_LEVEL=INFO     # Mostra apenas operações principais
-LOG_LEVEL=WARNING  # Mostra apenas alertas
+LOG_LEVEL=DEBUG    # Show detailed logs on console
+LOG_LEVEL=INFO     # Show only main operations
+LOG_LEVEL=WARNING  # Show alerts only
 LOG_FILE=logs/construction_agent.log
 ```
 
 ---
 
-## Interpretando Logs
+## Interpreting Logs
 
-### Exemplo 1: Carregamento de CSV
+### Example 1: CSV Loading
 
 ```
 🔍 DEBUG | document_loader | load_and_index_csv | Processing: sample_bid_tabulation.csv
@@ -143,9 +143,9 @@ LOG_FILE=logs/construction_agent.log
 ✅ INFO  | document_loader | load_and_index_csv | Indexed 120 items
 ```
 
-**Significa**: CSV foi detectado → esquema inferido → 120 items indexados ✅
+**Means**: CSV detected → schema inferred → 120 items indexed ✅
 
-### Exemplo 2: Erro em PDF
+### Example 2: PDF Error
 
 ```
 🔍 DEBUG | document_loader | load_and_index_pdf | Processing: plans.pdf
@@ -154,9 +154,9 @@ LOG_FILE=logs/construction_agent.log
 ❌ ERROR | document_loader | load_and_index_pdf | OCR extraction failed: tesseract not found
 ```
 
-**Significa**: PyPDF2 falhou → tentou OCR → OCR não disponível → erro ❌
+**Means**: PyPDF2 failed → tried OCR → OCR unavailable → error ❌
 
-### Exemplo 3: Query do Agente
+### Example 3: Agent Query
 
 ```
 📍 INFO  | run_agent | main | User query: What are the top items?
@@ -165,91 +165,28 @@ LOG_FILE=logs/construction_agent.log
 ✅ INFO  | run_agent | main | Agent returned response
 ```
 
-**Significa**: Query recebida → agente processou → resposta retornada ✅
+**Means**: Query received → agent processed → response returned ✅
 
 ---
 
-## Configurações
+## Useful Commands
 
-### No `.env`:
-
-```env
-# Enable debug logging
-DEBUG=true
-
-# Log file path (created automatically)
-LOG_FILE=logs/construction_agent.log
-```
-
-### Comportamento por Nível:
-
-| DEBUG | Console | File |
-|-------|---------|------|
-| true | DEBUG + INFO + WARN + ERROR | DEBUG + INFO + WARN + ERROR |
-| false | INFO + WARN + ERROR | DEBUG + INFO + WARN + ERROR |
-
----
-
-## Analisando Problemas
-
-### Problema: "Agent não retorna resposta"
-
-**Passos:**
-1. Ative DEBUG=true
-2. Execute `python3 run_agent.py`
-3. Faça a query
-4. Procure por:
-   ```
-   🔧 INFO | Agent processing query...
-   ✅ INFO | Agent returned response
-   ```
-5. Se o erro ocorre entre essas linhas, o problema está no agente
-
-**Verifique no log:**
+### View only ERRORs:
 ```bash
 grep "ERROR\|CRITICAL" logs/construction_agent.log
 ```
 
-### Problema: "PDF não indexou"
-
-**Passos:**
-1. Procure por logs do PDF:
-   ```bash
-   grep "pdf_parser\|PDF" logs/construction_agent.log
-   ```
-
-2. Se vir:
-   ```
-   ⚠️ No text extracted from PDF
-   ```
-   → PDF pode estar corrompido ou em formato não suportado
-
-3. Se vir:
-   ```
-   ❌ tesseract not found
-   ```
-   → OCR não está instalado (opcional)
-
----
-
-## Dicas Úteis
-
-### Ver apenas ERRORs:
-```bash
-grep "ERROR\|CRITICAL" logs/construction_agent.log
-```
-
-### Ver fluxo completo:
+### View complete flow:
 ```bash
 tail -f logs/construction_agent.log
 ```
 
-### Contar eventos por tipo:
+### Count events by type:
 ```bash
 grep "DEBUG\|INFO\|WARN\|ERROR" logs/construction_agent.log | sort | uniq -c
 ```
 
-### Gerar relatório:
+### Generate report:
 ```bash
 python3 -c "
 import re
@@ -273,76 +210,76 @@ with open('logs/construction_agent.log') as f:
 
 **LOG_LEVEL=DEBUG:**
 - CPU: +5-10% (logging overhead)
-- Disk: ~1-5MB por sessão (log files)
-- Console: Mais lento (mais output)
+- Disk: ~1-5MB per session (log files)
+- Console: Slower (more output)
 
 **LOG_LEVEL=INFO:**
 - CPU: Normal
 - Disk: Minimal
-- Console: Rápido
+- Console: Fast
 
-**Recomendação:** Use LOG_LEVEL=DEBUG durante desenvolvimento, LOG_LEVEL=INFO em produção.
+**Recommendation:** Use LOG_LEVEL=DEBUG during development, LOG_LEVEL=INFO in production.
 
 ---
 
-## Exemplo Completo de Sessão
+## Complete Session Example
 
 ```bash
-$ DEBUG=true python3 run_agent.py
-[Menu de seleção de documentos]
-[Indexação com logs detalhados]
-[Agent pronto]
+$ LOG_LEVEL=DEBUG python3 scripts/run_agent.py
+[Document selection menu]
+[Indexing with detailed logs]
+[Agent ready]
 
 📍 You: What are the top 3 items?
 
 🤖 Claude is analyzing...
-[Resposta do agente]
+[Agent response]
 
 📍 You: quit
 ✅ Goodbye!
 
 $ cat logs/construction_agent.log
-[Todos os logs da sessão]
+[All session logs]
 ```
 
 ---
 
 ## Troubleshooting
 
-### Logs não aparecem no console?
+### Logs not appearing in console?
 
-**Solução:**
-1. Verifique `.env`:
+**Solution:**
+1. Check `.env`:
    ```env
    LOG_LEVEL=DEBUG
    ```
 
-2. Reinicie o script
+2. Restart the script
 
-3. Se ainda não funcionar:
+3. If still not working:
    ```bash
-   LOG_LEVEL=DEBUG python3 run_agent.py 2>&1 | tee debug.log
+   LOG_LEVEL=DEBUG python3 scripts/run_agent.py 2>&1 | tee debug.log
    ```
 
-### Arquivo de log cresce muito?
+### Log file growing too large?
 
-**Solução:**
-1. Limpe o antigo:
+**Solution:**
+1. Clean up old one:
    ```bash
    rm logs/construction_agent.log
    ```
 
-2. Ou comprima:
+2. Or compress:
    ```bash
    gzip logs/construction_agent.log
    ```
 
-3. Defina LOG_LEVEL=INFO para sessões normais
+3. Set LOG_LEVEL=INFO for normal sessions
 
 ---
 
-**Pronto para debugar! 🔍**
+**Ready to debug! 🔍**
 
 ```bash
-LOG_LEVEL=DEBUG python3 run_agent.py
+LOG_LEVEL=DEBUG python3 scripts/run_agent.py
 ```

@@ -1,15 +1,15 @@
-# 🧠 Como Funcionam os Embeddings - CSV vs PDF
+# 🧠 How Embeddings Work - CSV vs PDF
 
-## 📊 CSV - Item por Item
+## 📊 CSV - Item by Item
 
-### Fluxo:
+### Flow:
 
 ```
 CSV (sample_bid_tabulation.csv)
         ↓
-   Parser (detecta colunas)
+   Parser (auto-detects columns)
         ↓
-   Para cada item:
+   For each item:
    ┌─────────────────────────────────────┐
    │ Item #1031000                       │
    │ "MOBILIZATION - LS @ $33950.00"     │
@@ -17,9 +17,9 @@ CSV (sample_bid_tabulation.csv)
    │ ↓ EMBEDDING (OpenAI)                │
    │                                      │
    │ [0.234, -0.156, 0.789, ...]        │
-   │ (1536 dimensões)                    │
+   │ (1536 dimensions)                   │
    │                                      │
-   │ ↓ Armazena em Vector Store          │
+   │ ↓ Store in Vector Store             │
    │ doc_id: csv_proj1_1031000           │
    └─────────────────────────────────────┘
 
@@ -33,27 +33,27 @@ CSV (sample_bid_tabulation.csv)
    ... (120 items total)
 ```
 
-### Resultado:
-- ✅ **120 documentos** indexados
-- ✅ Cada item é uma **string curta**
-- ✅ Cada string tem um **embedding** separado
-- ✅ Busca semântica funciona em items individuais
+### Result:
+- ✅ **120 documents** indexed
+- ✅ Each item is a **short string**
+- ✅ Each string has a **separate embedding**
+- ✅ Semantic search works on individual items
 
 ---
 
-## 📄 PDF - Dividido em Chunks
+## 📄 PDF - Divided into Chunks
 
-### Fluxo:
+### Flow:
 
 ```
 PDF (plans.pdf - 21.6MB)
         ↓
-   Extração de Texto (PyPDF2 ou OCR)
-   Result: 193,846 caracteres
+   Text Extraction (PyPDF2 or OCR)
+   Result: 193,846 characters
         ↓
-   Divisão em Chunks (tamanho ~500 chars)
+   Chunk Division (size ~500 chars)
         ↓
-   Para cada chunk:
+   For each chunk:
    ┌──────────────────────────────────────┐
    │ Chunk #0                             │
    │ "MoDOT PROJECT NO. 21-082A-3...     │
@@ -63,9 +63,9 @@ PDF (plans.pdf - 21.6MB)
    │ ↓ EMBEDDING (OpenAI)                 │
    │                                       │
    │ [0.512, -0.234, 0.101, ...]         │
-   │ (1536 dimensões)                     │
+   │ (1536 dimensions)                    │
    │                                       │
-   │ ↓ Armazena em Vector Store           │
+   │ ↓ Store in Vector Store              │
    │ doc_id: pdf_plans_chunk_0            │
    └──────────────────────────────────────┘
 
@@ -80,36 +80,36 @@ PDF (plans.pdf - 21.6MB)
    ... (1847 chunks total)
 ```
 
-### Resultado:
-- ✅ **~1847 chunks** indexados
-- ✅ Cada chunk é um **bloco de texto** (~500 caracteres)
-- ✅ Cada chunk tem um **embedding** separado
-- ✅ Busca semântica funciona em partes do documento
+### Result:
+- ✅ **~1847 chunks** indexed
+- ✅ Each chunk is a **text block** (~500 characters)
+- ✅ Each chunk has a **separate embedding**
+- ✅ Semantic search works on document sections
 
 ---
 
-## 🔍 Diferenças Chave
+## 🔍 Key Differences
 
-| Aspecto | CSV | PDF |
-|---------|-----|-----|
-| **O que é embedado** | Cada item (descrição + preço) | Chunks de texto (parágrafos) |
-| **Número de documentos** | Poucos (120 items) | Muitos (1000+) |
-| **Tamanho de cada doc** | Pequeno (50-100 chars) | Médio (500 chars) |
-| **Estrutura** | Estruturada (colunas) | Não-estruturada (texto livre) |
-| **Busca** | Por item específico | Por conceito/tema |
-| **Custo** | 120 embeddings | 1000+ embeddings |
+| Aspect | CSV | PDF |
+|--------|-----|-----|
+| **What gets embedded** | Each item (description + price) | Text chunks (paragraphs) |
+| **Number of docs** | Few (120 items) | Many (1000+) |
+| **Size of each doc** | Small (50-100 chars) | Medium (500 chars) |
+| **Structure** | Structured (columns) | Unstructured (free text) |
+| **Search** | For specific item | For concept/theme |
+| **Cost** | 120 embeddings | 1000+ embeddings |
 
 ---
 
-## 💡 Exemplo: Busca Semântica
+## 💡 Example: Semantic Search
 
 ### Query: "What about drainage?"
 
 ```
-1. Sistema cria embedding da query
+1. System creates embedding of query
    "What about drainage?" → [0.145, 0.789, ...]
 
-2. Compara com TODOS os embeddings armazenados:
+2. Compares with ALL stored embeddings:
 
    CSV Items:
    ✅ "DRAINAGE SYSTEM - INSTALLATION - LS @ $45000" 
@@ -126,53 +126,53 @@ PDF (plans.pdf - 21.6MB)
    ✅ "Drainage requirements: depth 18 inches..."
       (match score: 0.79)
 
-3. Retorna top 5 resultados (CSV + PDF combinados)
+3. Returns top 5 results (CSV + PDF combined)
 ```
 
 ---
 
-## 📊 Custo de Embeddings
+## 📊 Embedding Costs
 
 ### OpenAI text-embedding-3-small:
 - **CSV**: 120 items × ~15 tokens = 1,800 tokens
 - **PDF**: 1,847 chunks × ~150 tokens = 277,050 tokens
 - **Total**: ~278,850 tokens
 
-### Custo estimado:
+### Estimated cost:
 ```
 $0.02 / 1M tokens
 278,850 tokens → ~$0.0056
-(menos de 1 centavo por sessão!)
+(less than 1 cent per session!)
 ```
 
 ---
 
-## 🎯 Por que os dois?
+## 🎯 Why Both?
 
 **CSV:**
-- ✅ Dados **estruturados**
-- ✅ Preços precisos
-- ✅ Comparações claras
-- ✅ Poucos documentos → rápido
+- ✅ **Structured** data
+- ✅ Accurate prices
+- ✅ Clear comparisons
+- ✅ Few documents → fast
 
 **PDF:**
-- ✅ Contexto **detalhado**
-- ✅ Especificações técnicas
-- ✅ Requisitos do projeto
-- ✅ Informações não-estruturadas
+- ✅ **Detailed** context
+- ✅ Technical specifications
+- ✅ Project requirements
+- ✅ Unstructured information
 
-**Juntos:**
-- ✅ Busca **abrangente**
-- ✅ Respostas com **múltiplas fontes**
-- ✅ Compreensão **completa** do projeto
+**Together:**
+- ✅ **Comprehensive** search
+- ✅ Answers with **multiple sources**
+- ✅ **Complete** project understanding
 
 ---
 
-## 📝 Exemplo de Resposta com Ambos
+## 📝 Example Response with Both
 
 **User Query:** "What's the cost of drainage and how is it installed?"
 
-**Resposta incluindo:**
+**Response includes:**
 ```
 📊 FROM CSV:
 DRAINAGE SYSTEM - INSTALLATION - LS @ $45,000.00
@@ -182,42 +182,42 @@ DRAINAGE SYSTEM - INSTALLATION - LS @ $45,000.00
 The drainage system must include underdrains...
 Maximum depth 18 inches per specifications..."
 
-✅ Resposta integra dados estruturados + contexto técnico
+✅ Response integrates structured data + technical context
 ```
 
 ---
 
-## 🔧 Como Funciona Internamente
+## 🔧 How It Works Internally
 
-### 1. Indexação (primeiro load):
+### 1. Indexing (first load):
 
 ```python
 # CSV
 for item in csv_items:
     text = f"{item.description} - {item.unit} @ ${item.price}"
-    embedding = openai.embed(text)  # 1 API call por item
+    embedding = openai.embed(text)  # 1 API call per item
     vector_store.insert(embedding, text, metadata)
 
 # PDF
 for chunk in pdf_chunks:
-    embedding = openai.embed(chunk)  # 1 API call por chunk
+    embedding = openai.embed(chunk)  # 1 API call per chunk
     vector_store.insert(embedding, chunk, metadata)
 ```
 
-### 2. Busca (quando usuário pergunta):
+### 2. Search (when user asks):
 
 ```python
 query = "What about drainage?"
 query_embedding = openai.embed(query)  # 1 API call
 
-# Busca vetorial (LOCAL, sem API):
+# Vector search (LOCAL, no API):
 results = vector_store.search(query_embedding, limit=5)
-# Retorna top 5 matches de CSV + PDF
+# Returns top 5 matches from CSV + PDF
 ```
 
 ---
 
-## 📈 Fluxo Completo
+## 📈 Complete Flow
 
 ```
 ┌─ CSV (120 items)
@@ -243,30 +243,30 @@ results = vector_store.search(query_embedding, limit=5)
 
 ---
 
-## ✅ Resumo
+## ✅ Summary
 
-| Documento | Embedado? | Como? | Quantidade |
-|-----------|-----------|-------|-----------|
-| **CSV** | ✅ Sim | Item por item | 120 |
-| **PDF** | ✅ Sim | Chunk por chunk | 1847 |
-| **Total** | ✅ Sim | Ambos combinados | ~2000 |
+| Document | Embedded? | How? | Quantity |
+|----------|-----------|------|----------|
+| **CSV** | ✅ Yes | Item by item | 120 |
+| **PDF** | ✅ Yes | Chunk by chunk | 1847 |
+| **Total** | ✅ Yes | Both combined | ~2000 |
 
-**Resultado:** Sistema consegue buscar em ~2000 documentos simultaneamente com busca semântica! 🚀
+**Result:** System can search ~2000 documents simultaneously with semantic search! 🚀
 
 ---
 
-## 💰 Otimização
+## 💰 Optimization
 
-Se quiser **reduzir custos**:
+To **reduce costs**:
 
 ```python
-# Em run_agent.py, mude para:
-use_mock = True  # Forçar mock embeddings (grátis)
+# In run_agent.py, change to:
+use_mock = True  # Force mock embeddings (free)
 
-# Resultado:
-# ✅ Busca ainda funciona (qualidade reduzida)
-# ✅ Sem custo de API
-# ❌ Menos preciso semanticamente
+# Result:
+# ✅ Search still works (reduced quality)
+# ✅ No API costs
+# ❌ Less semantically accurate
 ```
 
-Mas com as suas API keys configuradas, o sistema usa **REAL embeddings** automaticamente! ✨
+But with your API keys configured, the system automatically uses **REAL embeddings**! ✨

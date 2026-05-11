@@ -1,6 +1,6 @@
-# 📋 Exemplos de Logs - Entenda cada mensagem
+# 📋 Log Examples - Understand Each Message
 
-## 1️⃣ Inicialização Normal (LOG_LEVEL=INFO)
+## 1️⃣ Normal Initialization (LOG_LEVEL=INFO)
 
 ```
 ==========================================================================================
@@ -31,14 +31,14 @@ Loading CSV: data/sample_bid_tabulation.csv
    • Total: 120
 ```
 
-**Análise:**
-- ✅ Documentos carregados
-- ✅ CSV indexado corretamente
-- ✅ Nenhum PDF encontrado (normal)
+**Analysis:**
+- ✅ Documents loaded
+- ✅ CSV indexed correctly
+- ✅ No PDFs found (normal)
 
 ---
 
-## 2️⃣ Inicialização com LOG_LEVEL=DEBUG
+## 2️⃣ Initialization with LOG_LEVEL=DEBUG
 
 ```
 2026-05-08 14:32:45 | DEBUG   | run_agent            | main                 | ================================================================================
@@ -58,111 +58,162 @@ Loading CSV: data/sample_bid_tabulation.csv
 
 2026-05-08 14:32:46 | INFO    | run_agent            | main                 | 📄 Starting indexing of 1 documents...
 2026-05-08 14:32:46 | DEBUG   | run_agent            | main                 | 🔄 Indexing CSV: sample_bid_tabulation.csv
-2026-05-08 14:32:46 | INFO    | document_loader      | load_and_index_csv   | Loading CSV: data/sample_bid_tabulation.csv
-2026-05-08 14:32:46 | DEBUG   | loaders              | load                 | Loading data/sample_bid_tabulation.csv with CSVParser
-2026-05-08 14:32:46 | DEBUG   | parsers              | parse                | Inferring schema from CSV (first 5 rows)...
-2026-05-08 14:32:47 | INFO    | document_loader      | load_and_index_csv   | Indexed 120 bid items from CSV
-2026-05-08 14:32:47 | INFO    | run_agent            | main                 | ✅ CSV indexed: sample_bid_tabulation.csv (120 items)
-
-2026-05-08 14:32:47 | INFO    | run_agent            | main                 | ✅ Indexing complete: CSV=120, PDF=0
-2026-05-08 14:32:47 | INFO    | run_agent            | main                 | 🤖 Initializing Claude agent...
-2026-05-08 14:32:47 | DEBUG   | run_agent            | main                 | AgentExecutor initializing with 1 projects and vector_store
-2026-05-08 14:32:47 | INFO    | agent.core           | __init__             | Initializing AgentExecutor...
-2026-05-08 14:32:47 | DEBUG   | agent.core           | __init__             | ANTHROPIC_API_KEY loaded from environment
-2026-05-08 14:32:47 | DEBUG   | agent.core           | __init__             | Creating Anthropic client with API key
-2026-05-08 14:32:47 | INFO    | agent.core           | __init__             | ✅ Agent ready with 4 tools
-2026-05-08 14:32:47 | INFO    | run_agent            | main                 | ✅ Agent ready with 4 tools
 ```
 
-**O que vemos:**
-1. 🔧 **Inicialização**: Toda configuração foi carregada corretamente
-2. 📂 **Documentos**: CSV foi encontrado e carregado
-3. 📊 **Indexação**: 120 items foram indexados no vector store
-4. 🤖 **Agente**: API key detectada, Anthropic client criado
-5. ✅ **Pronto**: 4 tools estão disponíveis
+**What this means:**
+- System initialized in DEBUG mode
+- Created temporary database
+- Vector store ready
+- DocumentLoader initialized
+- Starting indexing process
 
 ---
 
-## 3️⃣ Query Bem-Sucedida (LOG_LEVEL=DEBUG)
+## 3️⃣ Successful CSV Indexing
 
 ```
-📍 You: What are the top 3 items?
+2026-05-08 14:32:46 | DEBUG   | document_loader      | load_and_index_csv   | Processing: sample_bid_tabulation.csv
+2026-05-08 14:32:46 | DEBUG   | loaders              | load                 | Auto-detected format: CSV
+2026-05-08 14:32:46 | DEBUG   | parsers              | parse                | Inferring schema from CSV...
+2026-05-08 14:32:46 | DEBUG   | parsers              | infer_schema         | Found columns: PROJ_ID, ITEM_NO, ITEM_DESC, QUANTITY, UNIT_PRICE, BIDDER
+2026-05-08 14:32:47 | DEBUG   | document_loader      | load_and_index_csv   | Embedded 120 items
+2026-05-08 14:32:47 | INFO    | run_agent            | main                 | ✅ CSV indexed: sample_bid_tabulation.csv (120 items)
+```
 
-2026-05-08 14:32:50 | INFO    | run_agent            | main                 | 📍 User query: What are the top 3 items?
-2026-05-08 14:32:50 | DEBUG   | run_agent            | main                 | 🔄 Executing agent.query() for: What are the top 3 items?
-2026-05-08 14:32:50 | INFO    | run_agent            | main                 | 🔧 Agent processing query...
+**What this means:**
+- CSV detected automatically ✅
+- Schema inferred from columns ✅
+- All 120 items embedded successfully ✅
 
-2026-05-08 14:32:50 | DEBUG   | agent.core           | query                | Entering agent loop (iteration 1/5)
-2026-05-08 14:32:50 | DEBUG   | agent.core           | query                | Calling Claude API with 4 tools...
-2026-05-08 14:32:52 | DEBUG   | agent.core           | query                | Claude response stop_reason: tool_use
-2026-05-08 14:32:52 | DEBUG   | agent.core           | query                | Detected tool call: aggregate_items
-2026-05-08 14:32:52 | DEBUG   | agent.core           | _execute_tool        | Executing tool: aggregate_items
-2026-05-08 14:32:52 | DEBUG   | agent.core           | _tool_aggregate_items | Fetching top items by unit_price
+---
 
-2026-05-08 14:32:52 | DEBUG   | analysis.aggregations| get_top_items        | Sorting 120 items by unit_price (desc)
-2026-05-08 14:32:52 | DEBUG   | analysis.aggregations| get_top_items        | Found 120 items, returning top 3
-2026-05-08 14:32:52 | DEBUG   | agent.core           | _tool_aggregate_items | Got 3 results
+## 4️⃣ Agent Ready
 
-2026-05-08 14:32:52 | DEBUG   | agent.core           | query                | Tool result: "Top 3 highest items by unit price: ..."
-2026-05-08 14:32:52 | DEBUG   | agent.core           | query                | Entering agent loop (iteration 2/5)
-2026-05-08 14:32:52 | DEBUG   | agent.core           | query                | Calling Claude API...
-2026-05-08 14:32:54 | DEBUG   | agent.core           | query                | Claude response stop_reason: end_turn
-2026-05-08 14:32:54 | DEBUG   | agent.core           | query                | Agent finished (end_turn)
+```
+==========================================================================================
+  🤖 INITIALIZING AGENT
+==========================================================================================
 
-2026-05-08 14:32:54 | INFO    | run_agent            | main                 | ✅ Agent returned response
-2026-05-08 14:32:54 | DEBUG   | run_agent            | main                 | Response length: 456 characters
+✅ Agent ready with 4 tools
+   • Search (CSV + PDF)
+   • Top Items
+   • Outlier Detection
+   • Bidder Comparison
+```
+
+Agent is initialized with all tools available.
+
+---
+
+## 5️⃣ User Query Example
+
+```
+==========================================================================================
+  💬 ANALYSIS MODE
+==========================================================================================
+
+📍 You: What are the top 5 most expensive items?
 
 🤖 Claude is analyzing...
 
 ------------------------------------------------------------------------------------------
-Here are the **Top 3 Most Expensive Bid Items**:
+Here are the **Top 5 Most Expensive Bid Items**:
 
-1. MOBILIZATION - $33,950.00
-2. EVALUATION OF PAVEMENT MARKING - $35,000.00
-3. TRAFFIC CONTROL - $31,200.00
+1. **MOBILIZATION** - LS
+   - Median Price: $33,950.00
+   - Price Range: $26,500 - $40,000
+   - Variance: $13,500 (50.9%)
+
+2. **EVALUATION OF PAVEMENT MARKING** - LS
+   - Median Price: $35,000.00
+   - Price Range: $30,000 - $40,000
+   - Variance: $10,000 (28.6%)
+
+3. **TRAFFIC CONTROL** - LF
+   - Median Price: $28,400.00
+   - From N = 4 bidders
+   - Estimated Total: $71,000,000
+
+[Additional items...]
+
+**Insights:**
+- Item MOBILIZATION shows high price variance across bidders
+- EVALUATION requires further analysis for cost drivers
 ------------------------------------------------------------------------------------------
-```
 
-**Entendendo o Fluxo:**
-1. Query recebida → Logs de entrada
-2. Agent loop iteração 1 → Claude chamado
-3. Tool call detectado → `aggregate_items` acionada
-4. Função executada → 3 items retornados
-5. Agent loop iteração 2 → Claude processa resultado
-6. `end_turn` → Agent concluiu
-7. Resposta → 456 caracteres
+📍 You: Are there any pricing anomalies?
+
+🤖 Claude is analyzing...
+
+------------------------------------------------------------------------------------------
+**Pricing Anomalies Detected:**
+
+📈 **Outliers (Z-Score > 2.0):**
+
+1. **Item 1040000 - TRAFFIC CONTROL**
+   - Bidder: Company_C
+   - Outlier Price: $18,750.00
+   - Expected Price: $15,500.00 (median)
+   - Z-Score: 2.1σ (statistically significant)
+   - Issue: 21% above median → investigate cost drivers
+
+2. **Item 2033000 - BORROW EXCAVATION**
+   - Bidder: Company_B
+   - Outlier Price: $2,450.00
+   - Expected Price: $850.00 (median)
+   - Z-Score: 3.2σ (highly significant!)
+   - Issue: 188% above median → likely data error or special requirements
+
+**Recommendations:**
+- Contact Company_C for TRAFFIC CONTROL pricing explanation
+- Verify Company_B EXCAVATION quote (possible data entry error)
+------------------------------------------------------------------------------------------
+
+📍 You: quit
+
+👋 Goodbye!
+```
 
 ---
 
-## 4️⃣ Erro em Upload de Arquivo (LOG_LEVEL=DEBUG)
+## 6️⃣ Error Handling
 
+### Missing File:
 ```
-2026-05-08 14:35:12 | INFO    | run_agent            | load_documents       | 📄 Document loading starting...
-2026-05-08 14:35:12 | DEBUG   | run_agent            | upload_file          | User attempting file upload...
+❌ File not found: /path/to/nonexistent.csv
+📂 Please provide a valid file path
+```
 
-2026-05-08 14:35:15 | DEBUG   | run_agent            | upload_file          | File path provided: /tmp/corrupted.pdf
-2026-05-08 14:35:15 | DEBUG   | run_agent            | upload_file          | File exists: True, Size: 45.2MB
+### Invalid Format:
+```
+❌ Invalid format: '.xlsx'
+   Supported: .csv, .pdf
+```
 
-2026-05-08 14:35:15 | DEBUG   | run_agent            | upload_file          | File type: .pdf, Destination: /tmp/construction_agent_xyz/corrupted.pdf
-2026-05-08 14:35:15 | DEBUG   | run_agent            | upload_file          | Copying file...
-2026-05-08 14:35:16 | INFO    | run_agent            | upload_file          | ✅ Uploaded: corrupted.pdf (45.2MB)
+### File Too Large:
+```
+❌ File too large: 150.5MB (max 100MB)
+```
 
-2026-05-08 14:35:16 | DEBUG   | run_agent            | main                 | 🔄 Indexing PDF: corrupted.pdf
-2026-05-08 14:35:16 | DEBUG   | document_loader      | load_and_index_pdf   | Loading PDF: /tmp/construction_agent_xyz/corrupted.pdf
-2026-05-08 14:35:16 | DEBUG   | pdf_parser           | _extract_text        | Starting PDF text extraction...
-2026-05-08 14:35:16 | DEBUG   | pdf_parser           | _extract_text        | Attempting PyPDF2 extraction...
+### API Credits Exhausted:
+```
+⚠️  API Credits/Quota Exceeded
 
-2026-05-08 14:35:18 | WARNING | pdf_parser           | _extract_text        | PyPDF2 extraction failed: Could not get pages. The PDF may be corrupted.
-2026-05-08 14:35:18 | DEBUG   | pdf_parser           | _extract_text        | Fallback: Trying OCR extraction...
-2026-05-08 14:35:18 | DEBUG   | pdf_parser           | _extract_with_ocr    | Checking OCR availability...
+Using mock embeddings - search may be less accurate.
+```
 
-2026-05-08 14:35:19 | WARNING | pdf_parser           | _extract_with_ocr    | pytesseract not installed or tesseract binary not found
-2026-05-08 14:35:19 | DEBUG   | pdf_parser           | _extract_text        | OCR fallback failed
+---
 
-2026-05-08 14:35:19 | ERROR   | document_loader      | load_and_index_pdf   | Failed to load PDF: /tmp/construction_agent_xyz/corrupted.pdf - No text extracted
-2026-05-08 14:35:19 | WARNING | run_agent            | main                 | ⚠️  Error indexing corrupted.pdf: Failed to load PDF - No text extracted
+## 7️⃣ Complete Session Log
 
-✅ Uploaded: corrupted.pdf (45.2MB)
+```bash
+$ LOG_LEVEL=DEBUG python3 scripts/run_agent.py
+
+==========================================================================================
+  🤖 CONSTRUCTION ESTIMATING AGENT
+==========================================================================================
+
+[Document selection and loading...]
 
 ==========================================================================================
   📊 INDEXING DOCUMENTS
@@ -170,98 +221,61 @@ Here are the **Top 3 Most Expensive Bid Items**:
 
 ✅ Indexing complete:
    • CSV items: 120
-   • PDF chunks: 0
-   • Total: 120
-```
+   • PDF chunks: 1,847
+   • Total: 1,967
 
-**Análise do Erro:**
-1. ✅ Upload foi bem-sucedido
-2. ⚠️ PyPDF2 falhou → PDF pode estar corrompido
-3. ⚠️ OCR não disponível → Sem fallback
-4. ❌ 0 chunks indexados do PDF
-5. Sistema continuou com CSV (graceful degradation)
+==========================================================================================
+  🤖 INITIALIZING AGENT
+==========================================================================================
 
----
+✅ Agent ready with 4 tools
 
-## 5️⃣ Erro em Query (LOG_LEVEL=DEBUG)
+==========================================================================================
+  💬 ANALYSIS MODE
+==========================================================================================
 
-```
-📍 You: Compare prices on INVALIDITEM
-
-2026-05-08 14:37:30 | INFO    | run_agent            | main                 | 📍 User query: Compare prices on INVALIDITEM
-2026-05-08 14:37:30 | DEBUG   | run_agent            | main                 | 🔄 Executing agent.query() for: Compare prices on INVALIDITEM
-2026-05-08 14:37:30 | INFO    | run_agent            | main                 | 🔧 Agent processing query...
-
-2026-05-08 14:37:30 | DEBUG   | agent.core           | query                | Entering agent loop (iteration 1/5)
-2026-05-08 14:37:30 | DEBUG   | agent.core           | query                | Calling Claude API with 4 tools...
-2026-05-08 14:37:32 | DEBUG   | agent.core           | query                | Claude response stop_reason: tool_use
-2026-05-08 14:37:32 | DEBUG   | agent.core           | query                | Detected tool call: compare_bidders
-2026-05-08 14:37:32 | DEBUG   | agent.core           | _execute_tool        | Executing tool: compare_bidders
-2026-05-08 14:37:32 | DEBUG   | agent.core           | _tool_compare_bidders| Looking for item: INVALIDITEM
-
-2026-05-08 14:37:32 | DEBUG   | analysis.comparisons | compare_bidders_on_item | Searching in 1 projects for item: INVALIDITEM
-2026-05-08 14:37:32 | WARNING | analysis.comparisons | compare_bidders_on_item | Item INVALIDITEM not found
-2026-05-08 14:37:32 | DEBUG   | agent.core           | _tool_compare_bidders| No comparisons found, returning not found message
-
-2026-05-08 14:37:32 | DEBUG   | agent.core           | query                | Tool result: "Item INVALIDITEM not found..."
-2026-05-08 14:37:32 | DEBUG   | agent.core           | query                | Entering agent loop (iteration 2/5)
-2026-05-08 14:37:33 | DEBUG   | agent.core           | query                | Calling Claude API...
-2026-05-08 14:37:34 | DEBUG   | agent.core           | query                | Claude response stop_reason: end_turn
-2026-05-08 14:37:34 | DEBUG   | agent.core           | query                | Agent finished
-
-2026-05-08 14:37:34 | INFO    | run_agent            | main                 | ✅ Agent returned response
-2026-05-08 14:37:34 | DEBUG   | run_agent            | main                 | Response length: 187 characters
+📍 You: What are the top 3 items?
 
 🤖 Claude is analyzing...
 
-------------------------------------------------------------------------------------------
-I couldn't find an item with that name. Could you provide the item number or a more specific description?
-------------------------------------------------------------------------------------------
-```
+[Claude response with data]
 
-**Análise:**
-1. ✅ Query processada
-2. 🔍 Tool executada corretamente
-3. ⚠️ Item não encontrado (esperado)
-4. ✅ Agent retornou resposta apropriada (sem erro)
+📍 You: What about drainage?
 
----
+🤖 Claude is analyzing...
 
-## 📊 Resumo de Padrões
+[Claude response with PDF and CSV data combined]
 
-### Sucesso:
-```
-INFO | Operation started
-DEBUG | Details of operation
-DEBUG | Sub-operations
-INFO | Operation complete ✅
-```
+📍 You: quit
 
-### Aviso:
-```
-INFO | Operation started
-WARNING | Something unexpected but recoverable
-DEBUG | Fallback mechanism
-INFO | Operation completed with limitations ⚠️
-```
-
-### Erro:
-```
-INFO | Operation started
-ERROR | Critical failure
-DEBUG | Exception details
-WARNING | System continuing despite error
+👋 Goodbye!
 ```
 
 ---
 
-## 🎯 Como Ler Logs
+## Key Takeaways
 
-1. **Procure por timestamps:** Mostram ordem de execução
-2. **Procure por símbolos:** ✅ = sucesso, ⚠️ = aviso, ❌ = erro
-3. **Procure por função:** Mostra qual código está rodando
-4. **Procure por mensagens:** Explicam o que está acontecendo
+✅ **SUCCESS indicators:**
+- `✅ Loaded X documents`
+- `✅ Agent ready with 4 tools`
+- `✅ CSV indexed: X items`
+- `✅ PDF indexed: X chunks`
+
+⚠️ **WARNING indicators:**
+- `⚠️ File not found`
+- `⚠️ OCR unavailable`
+- `⚠️ API Credits/Quota`
+
+❌ **ERROR indicators:**
+- `❌ Invalid format`
+- `❌ File too large`
+- `❌ Error loading`
+
+📍 **User interaction indicators:**
+- `📍 You:` = User question
+- `🤖 Claude is analyzing...` = Processing
+- `---------` = Response delimiter
 
 ---
 
-**Agora você consegue entender qualquer problema pelo log!** 🔍
+**See `docs/DEBUGGING.md` for more detailed log interpretation.**
