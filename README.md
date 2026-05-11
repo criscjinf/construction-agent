@@ -23,28 +23,30 @@ source venv/bin/activate  # or: venv\Scripts\activate on Windows
 pip install -r requirements.txt
 ```
 
-### 2. Configure
+### 2. Configure (Optional)
 
 ```bash
 # Copy example configuration
 cp .env.example .env
 
-# Add your API keys
+# Add your API keys (optional - mock embeddings work without them)
 nano .env
-# Required:
-#   OPENAI_API_KEY=sk-...
-#   ANTHROPIC_API_KEY=sk-ant-...
+# Optional:
+#   OPENAI_API_KEY=sk-...          (for real embeddings)
+#   ANTHROPIC_API_KEY=sk-ant-...   (should already be set)
 ```
 
 ### 3. Run
 
 ```bash
-# Main interactive agent (upload or load from data/)
+# 🚀 Main command - does everything
 python scripts/run_agent.py
 
-# Quick demo with data/ folder (auto-loads, no upload)
+# Quick demo with data/ folder (auto-loaded)
 python scripts/demo.py
 ```
+
+**→ See `docs/QUICK_START.md` for full walkthrough**
 
 ---
 
@@ -187,6 +189,16 @@ tests/
 ✅ No injection vulnerabilities  
 
 See `docs/SECURITY.md` for detailed audit.
+
+---
+
+## Documentation
+
+- **`docs/QUICK_START.md`** — Start here! Full walkthrough of all features
+- **`docs/DEBUGGING.md`** — Enable detailed logging and debug mode
+- **`docs/EMBEDDINGS.md`** — How embeddings work (CSV vs PDF)
+- **`docs/EXAMPLES.md`** — Real log examples and outputs
+- **`docs/SECURITY.md`** — Security audit (OWASP Top 10)
 
 ---
 
