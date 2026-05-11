@@ -39,15 +39,20 @@ nano .env
 ### 3. Run
 
 ```bash
-# Interactive analysis mode
-python src/main.py analyze --file data/sample_bid_tabulation.csv
+# Main interactive agent (upload or load from data/)
+python scripts/run_agent.py
 
-# Single query
-python src/main.py analyze --file data/sample_bid_tabulation.csv \
-  --query "Top 5 most expensive items?"
+# Quick demo with data/ folder
+python scripts/demo.py
 
-# Validate CSV data
-python src/main.py validate
+# Interactive test mode (no API keys needed)
+python scripts/test_interactive.py
+
+# Upload documents to agent
+python scripts/upload_documents.py
+
+# PDF search utility
+python scripts/quick_pdf_search.py
 ```
 
 ---
@@ -169,6 +174,13 @@ src/
 ├── config.py      # Settings management
 └── main.py        # CLI entry point
 
+scripts/
+├── run_agent.py       # Main interactive agent
+├── demo.py            # Quick demo with data/
+├── test_interactive.py # Interactive test (no API keys)
+├── upload_documents.py # Document upload utility
+└── quick_pdf_search.py # PDF search utility
+
 tests/
 ├── unit/          # Function logic tests
 └── integration/   # CRUD, retrieval, agent tests
@@ -186,7 +198,7 @@ tests/
 ✅ Comprehensive error handling  
 ✅ No injection vulnerabilities  
 
-See SECURITY.md for detailed audit.
+See `docs/SECURITY.md` for detailed audit.
 
 ---
 

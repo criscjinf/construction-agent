@@ -33,7 +33,7 @@ class AgentExecutor:
         self,
         projects: list[Project],
         vector_store: Optional[SQLiteVectorStore] = None,
-        model: str = "claude-3-5-sonnet-20241022"
+        model: str = "claude-sonnet-4-6"
     ):
         """
         Initialize agent executor.

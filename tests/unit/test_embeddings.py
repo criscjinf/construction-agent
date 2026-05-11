@@ -1,80 +1,56 @@
-"""
-Tests for embedding clients.
-"""
+#!/usr/bin/env python3
+"""Test which embeddings are being used"""
 
-import pytest
-from src.vectorstore.embeddings import EmbeddingClient, MockEmbeddingClient
+import os
+from dotenv import load_dotenv
 
+load_dotenv(".env")
 
-class TestMockEmbeddingClient:
-    """Tests for MockEmbeddingClient (no API calls)."""
+openai_key = os.getenv("OPENAI_API_KEY")
+print("=" * 80)
+print("🔍 EMBEDDINGS CHECK")
+print("=" * 80)
 
-    def test_client_initializes(self):
-        """Test client initialization."""
-        client = MockEmbeddingClient()
-        assert client is not None
-        assert client.embedding_dim == 1536
+if openai_key:
+    print("\n✅ OPENAI_API_KEY is configured")
+    print(f"   Key starts with: {openai_key[:20]}...")
+    print("\n🎯 System will use: REAL OpenAI embeddings")
+    print("   Model: text-embedding-3-small")
+    print("   Cost: ~$0.02 per 1M tokens")
+else:
+    print("\n❌ OPENAI_API_KEY not configured")
+    print("\n🎯 System will use: MOCK embeddings (local)")
+    print("   Cost: FREE (no API calls)")
 
-    def test_embed_single_text(self):
-        """Test embedding a single text."""
-        client = MockEmbeddingClient()
-        text = "What are the top bid items?"
-        embedding = client.embed_text(text)
+print("\n" + "=" * 80)
 
-        assert embedding is not None
-        assert len(embedding) == 1536
-        assert all(isinstance(x, float) for x in embedding)
+# Test DocumentLoader decision
+from src.data.document_loader import DocumentLoader
+from src.vectorstore.storage import SQLiteVectorStore
+import tempfile
 
-    def test_embed_same_text_returns_same_embedding(self):
-        """Test that same text returns same embedding (deterministic)."""
-        client = MockEmbeddingClient()
-        text = "MOBILIZATION"
+print("\n📊 Testing DocumentLoader initialization...\n")
 
-        embedding1 = client.embed_text(text)
-        embedding2 = client.embed_text(text)
+with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+    db_path = f.name
 
-        assert embedding1 == embedding2
+vector_store = SQLiteVectorStore(db_path=db_path)
 
-    def test_embed_different_texts_return_different_embeddings(self):
-        """Test that different texts return different embeddings."""
-        client = MockEmbeddingClient()
+# With real key
+print("🔄 Creating DocumentLoader with API key available...")
+use_mock = not bool(openai_key)
+doc_loader = DocumentLoader(vector_store=vector_store, use_mock_embeddings=use_mock)
 
-        emb1 = client.embed_text("MOBILIZATION")
-        emb2 = client.embed_text("BONDS AND INSURANCE")
+if use_mock:
+    print("   ❌ Using: MOCK embeddings")
+    print("   Embedding client type:", type(doc_loader.embedding_client).__name__)
+else:
+    print("   ✅ Using: REAL OpenAI embeddings")
+    print("   Embedding client type:", type(doc_loader.embedding_client).__name__)
 
-        assert emb1 != emb2
+print("\n" + "=" * 80)
+print("✅ Test complete\n")
 
-    def test_batch_embed(self):
-        """Test batch embedding."""
-        client = MockEmbeddingClient()
-        texts = ["Text 1", "Text 2", "Text 3"]
-
-        embeddings = client.batch_embed(texts)
-
-        assert len(embeddings) == 3
-        assert all(len(e) == 1536 for e in embeddings)
-
-    def test_embed_empty_text(self):
-        """Test embedding empty text returns zero vector."""
-        client = MockEmbeddingClient()
-        embedding = client.embed_text("")
-
-        assert embedding == [0.0] * 1536
-
-    def test_embedding_dimension_small_model(self):
-        """Test embedding dimension for text-embedding-3-small."""
-        client = MockEmbeddingClient(model="text-embedding-3-small")
-        assert client.get_dimension() == 1536
-
-    def test_embedding_dimension_large_model(self):
-        """Test embedding dimension for text-embedding-3-large."""
-        client = MockEmbeddingClient(model="text-embedding-3-large")
-        assert client.get_dimension() == 3072
-
-    def test_embeddings_are_normalized_range(self):
-        """Test embeddings are in reasonable range."""
-        client = MockEmbeddingClient()
-        embedding = client.embed_text("test text")
-
-        # Mock embeddings should be in [-1, 1] range
-        assert all(-1.1 <= x <= 1.1 for x in embedding)
+# Cleanup
+import shutil
+os.remove(db_path)

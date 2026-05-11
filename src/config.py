@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     # Models
     embedding_model: str = "text-embedding-3-small"
-    agent_model: str = "claude-3-5-sonnet-20241022"
+    agent_model: str = "claude-sonnet-4-6"
 
     # Database
     database_url: str = "sqlite:///./construction_agent.db"

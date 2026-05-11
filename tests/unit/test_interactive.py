@@ -9,6 +9,10 @@ import tempfile
 import os
 from pathlib import Path
 
+# Load environment variables from .env
+from dotenv import load_dotenv
+load_dotenv(".env")
+
 try:
     from src.data.loaders import DataLoader
     from src.vectorstore.storage import SQLiteVectorStore
