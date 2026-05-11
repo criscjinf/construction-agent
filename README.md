@@ -42,17 +42,8 @@ nano .env
 # Main interactive agent (upload or load from data/)
 python scripts/run_agent.py
 
-# Quick demo with data/ folder
+# Quick demo with data/ folder (auto-loads, no upload)
 python scripts/demo.py
-
-# Interactive test mode (no API keys needed)
-python scripts/test_interactive.py
-
-# Upload documents to agent
-python scripts/upload_documents.py
-
-# PDF search utility
-python scripts/quick_pdf_search.py
 ```
 
 ---
@@ -175,11 +166,8 @@ src/
 └── main.py        # CLI entry point
 
 scripts/
-├── run_agent.py       # Main interactive agent
-├── demo.py            # Quick demo with data/
-├── test_interactive.py # Interactive test (no API keys)
-├── upload_documents.py # Document upload utility
-└── quick_pdf_search.py # PDF search utility
+├── run_agent.py    # Main interactive agent (upload + indexation + analysis)
+└── demo.py         # Quick demo (auto-loads from data/, no upload)
 
 tests/
 ├── unit/          # Function logic tests
