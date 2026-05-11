@@ -42,8 +42,12 @@ def print_header(title):
     print("=" * 90)
 
 
-def upload_file(upload_dir: str) -> str:
-    """Prompt user to upload a file."""
+def upload_file(upload_dir: str) -> tuple[str, str]:
+    """
+    Prompt user to upload a file and detect type automatically.
+    Returns: (file_path, file_type) where file_type is 'csv' or 'pdf'
+    Returns: ('', '') if cancelled or invalid
+    """
     print("\n📁 FILE UPLOAD")
     print("-" * 90)
     print("Supported formats: CSV, PDF")
@@ -53,29 +57,36 @@ def upload_file(upload_dir: str) -> str:
         file_path = input("📂 Enter file path (or 'cancel'): ").strip()
 
         if file_path.lower() == "cancel":
-            return ""
+            return "", ""
 
         path = Path(file_path)
 
+        # Check file exists
         if not path.exists():
             print(f"❌ File not found: {file_path}")
             continue
 
+        # Check extension
         ext = path.suffix.lower()
         if ext not in [".csv", ".pdf"]:
-            print(f"❌ Unsupported format. Use .csv or .pdf")
+            print(f"❌ Invalid format: '.{ext[1:] if ext else 'no extension'}'")
+            print(f"   Supported: .csv, .pdf")
             continue
 
+        # Check file size
         size_mb = path.stat().st_size / (1024 * 1024)
         if size_mb > 100:
             print(f"❌ File too large: {size_mb:.1f}MB (max 100MB)")
             continue
 
+        # Copy file
         try:
             dest = Path(upload_dir) / path.name
             shutil.copy(str(path), str(dest))
+            file_type = "csv" if ext == ".csv" else "pdf"
             print(f"✅ Uploaded: {path.name} ({size_mb:.1f}MB)")
-            return str(dest)
+            print(f"   Detected type: {file_type.upper()}")
+            return str(dest), file_type
         except Exception as e:
             print(f"❌ Error: {e}")
 
@@ -103,28 +114,28 @@ def load_documents():
         print("\n🚀 UPLOAD MODE")
         while True:
             print("\nOptions:")
-            print("  1. Upload CSV")
-            print("  2. Upload PDF")
-            print("  3. Start analysis")
+            print("  1. Upload a file (auto-detect CSV/PDF)")
+            print("  2. Start analysis")
 
-            upload_choice = input("\n👉 Choose (1-3): ").strip()
+            upload_choice = input("\n👉 Choose (1-2): ").strip()
 
             if upload_choice == "1":
-                file_path = upload_file(upload_dir)
+                file_path, file_type = upload_file(upload_dir)
                 if file_path:
                     uploaded_files.append(file_path)
-                    try:
-                        new_projects = DataLoader.load(file_path)
-                        projects.extend(new_projects)
-                    except Exception as e:
-                        print(f"❌ Error loading: {e}")
+
+                    # Auto-process based on detected type
+                    if file_type == "csv":
+                        try:
+                            new_projects = DataLoader.load(file_path)
+                            projects.extend(new_projects)
+                            print(f"   ✅ CSV parsed: {len(new_projects)} projects")
+                        except Exception as e:
+                            print(f"   ⚠️  Error parsing CSV: {e}")
+                    elif file_type == "pdf":
+                        print(f"   ✅ PDF will be indexed during analysis")
 
             elif upload_choice == "2":
-                file_path = upload_file(upload_dir)
-                if file_path:
-                    uploaded_files.append(file_path)
-
-            elif upload_choice == "3":
                 break
             else:
                 print("❌ Invalid option")
