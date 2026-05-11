@@ -4,10 +4,14 @@ Demo - Mostra o fluxo completo com dados já em data/
 """
 
 import sys
+from pathlib import Path
+
+# Add project root to path so imports work from scripts/
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import tempfile
 import os
 import shutil
-from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv(".env")

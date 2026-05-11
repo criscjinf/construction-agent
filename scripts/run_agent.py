@@ -5,10 +5,14 @@ Upload documents (CSV/PDF) OR load from data/ folder, then ask questions
 """
 
 import sys
+from pathlib import Path
+
+# Add project root to path so imports work from scripts/
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import tempfile
 import os
 import shutil
-from pathlib import Path
 
 # Load environment variables from .env
 from dotenv import load_dotenv

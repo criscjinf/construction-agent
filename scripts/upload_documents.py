@@ -5,10 +5,14 @@ Upload CSV and PDF files, then query the agent about them.
 """
 
 import sys
+from pathlib import Path
+
+# Add project root to path so imports work from scripts/
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import os
 import tempfile
 import shutil
-from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv(".env")
