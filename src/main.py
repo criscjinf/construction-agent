@@ -133,138 +133,171 @@ def load_documents():
     return upload_dir, uploaded_files, projects
 
 
-def main():
-    global log
+def _index_documents(
+    upload_dir: str,
+    uploaded_files: list[str],
+    db_path: str,
+    log
+) -> tuple:
+    """Index documents into vector store. Returns (vector_store, embedding_client, results)."""
+    print_header("📊 INDEXING DOCUMENTS")
 
-    # Initialize logging at runtime (not at import time)
-    initialize_logging()
-    log = get_logger("construction_agent")
+    log.info(f"📊 Initializing SQLite vector store at {db_path}")
+    vector_store = SQLiteVectorStore(db_path=db_path)
+    log.debug("✅ Vector store initialized")
 
-    print_header("🤖 CONSTRUCTION ESTIMATING AGENT")
-
-    log.info("=" * 80)
-    log.info(f"Starting Construction Agent | Log Level: {os.getenv('LOG_LEVEL', 'INFO')}")
-    log.info(f"Config: LOG_LEVEL={os.getenv('LOG_LEVEL', 'INFO')}, LOG_FILE={os.getenv('LOG_FILE')}")
-    log.info("=" * 80)
-
-    # Load documents (upload or from data/)
-    log.info("📄 Starting document loading process...")
-    upload_dir, uploaded_files, projects = load_documents()
-    log.debug(f"Document loading complete: {len(uploaded_files)} files, {len(projects)} projects")
-
-    # Create vector store
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-        db_path = f.name
-
-    log.debug(f"Created temporary database: {db_path}")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if not openai_key:
+        log.error("❌ OPENAI_API_KEY not configured in .env")
+        log.info("To use document indexing, set OPENAI_API_KEY in your .env file")
+        import sys
+        sys.exit(1)
 
     try:
-        # Initialize vector store and index documents
-        print_header("📊 INDEXING DOCUMENTS")
+        embedding_client = OpenAIEmbeddingClient()
+        log.info("📦 Initializing indexers with OpenAI embeddings")
+        log.debug("Using OpenAI text-embedding-3-small")
+    except Exception as e:
+        log.error(f"❌ Failed to initialize OpenAI embeddings: {e}")
+        log.info("Check that OPENAI_API_KEY is valid and you have sufficient credits")
+        import sys
+        sys.exit(1)
 
-        log.info(f"📊 Initializing SQLite vector store at {db_path}")
-        vector_store = SQLiteVectorStore(db_path=db_path)
-        log.debug("✅ Vector store initialized")
+    indexers_factory = IndexersFactory(vector_store=vector_store, embedding_client=embedding_client)
+    doc_loader = DocumentLoader(indexers_factory=indexers_factory)
+    log.debug("✅ DocumentLoader initialized with factory")
 
-        # Initialize embedding client (must have OpenAI API key)
-        openai_key = os.getenv("OPENAI_API_KEY")
-
-        if not openai_key:
-            log.error("❌ OPENAI_API_KEY not configured in .env")
-            log.info("To use document indexing, set OPENAI_API_KEY in your .env file")
-            import sys
-            sys.exit(1)
+    results = {"csv": 0, "pdf": 0}
+    log.info(f"📄 Starting indexing of {len(uploaded_files)} documents...")
+    for file_path in uploaded_files:
+        filename = Path(file_path).name
+        ext = Path(file_path).suffix.lower()
 
         try:
-            embedding_client = OpenAIEmbeddingClient()
-            log.info("📦 Initializing indexers with OpenAI embeddings")
-            log.debug("Using OpenAI text-embedding-3-small")
+            log.debug(f"🔄 Indexing {ext.upper()}: {filename}")
+            count = doc_loader.load_and_index(file_path)
+
+            if ext == ".csv":
+                results["csv"] += count
+                log.info(f"   ✅ CSV indexed: {filename} ({count} items)")
+            elif ext == ".pdf":
+                results["pdf"] += count
+                log.info(f"   ✅ PDF indexed: {filename} ({count} chunks)")
+
         except Exception as e:
-            log.error(f"❌ Failed to initialize OpenAI embeddings: {e}")
-            log.info("Check that OPENAI_API_KEY is valid and you have sufficient credits")
-            import sys
-            sys.exit(1)
+            is_debug = os.getenv("LOG_LEVEL", "INFO").upper() == "DEBUG"
+            log.error(f"❌ Error indexing {filename}: {e}", exc_info=is_debug)
+            print(f"⚠️  Error indexing {filename}: {e}")
 
-        indexers_factory = IndexersFactory(vector_store=vector_store, embedding_client=embedding_client)
-        doc_loader = DocumentLoader(indexers_factory=indexers_factory)
-        log.debug("✅ DocumentLoader initialized with factory")
+    log.info(f"✅ Indexing complete: CSV={results['csv']}, PDF={results['pdf']}")
+    print(f"\n✅ Indexing complete:")
+    print(f"   • CSV items: {results['csv']}")
+    print(f"   • PDF chunks: {results['pdf']}")
+    print(f"   • Total: {results['csv'] + results['pdf']}")
 
-        results = {"csv": 0, "pdf": 0}
+    return vector_store, embedding_client, results
 
-        log.info(f"📄 Starting indexing of {len(uploaded_files)} documents...")
-        for file_path in uploaded_files:
-            filename = Path(file_path).name
-            ext = Path(file_path).suffix.lower()
 
-            try:
-                log.debug(f"🔄 Indexing {ext.upper()}: {filename}")
-                count = doc_loader.load_and_index(file_path)
+def _initialize_agent(projects: list, vector_store, embedding_client, log):
+    """Initialize and return the agent executor."""
+    print_header("🤖 INITIALIZING AGENT")
 
-                if ext == ".csv":
-                    results["csv"] += count
-                    log.info(f"   ✅ CSV indexed: {filename} ({count} items)")
-                elif ext == ".pdf":
-                    results["pdf"] += count
-                    log.info(f"   ✅ PDF indexed: {filename} ({count} chunks)")
+    log.info("🤖 Initializing Claude agent...")
+    if not projects:
+        from src.data.models import Project
+        projects = [Project(proj_id="DOCS", proj_name="Uploaded Documents", items=[])]
+        log.debug("Created dummy project for documents without CSV data")
 
-            except Exception as e:
-                is_debug = os.getenv("LOG_LEVEL", "INFO").upper() == "DEBUG"
-                log.error(f"❌ Error indexing {filename}: {e}", exc_info=is_debug)
-                print(f"⚠️  Error indexing {filename}: {e}")
+    log.debug(f"Creating agent with {len(projects)} projects and vector_store")
+    agent = AgentFactory.create_agent(
+        projects=projects,
+        vector_store=vector_store,
+        embedding_client=embedding_client,
+        allow_fallback=True
+    )
+    executor_type = type(agent).__name__
+    log.info(f"✅ Agent ready: {executor_type} with {len(agent.tools)} tools")
 
-        log.info(f"✅ Indexing complete: CSV={results['csv']}, PDF={results['pdf']}")
-        print(f"\n✅ Indexing complete:")
-        print(f"   • CSV items: {results['csv']}")
-        print(f"   • PDF chunks: {results['pdf']}")
-        print(f"   • Total: {results['csv'] + results['pdf']}")
+    print(f"✅ Agent ready with {len(agent.tools)} tools")
+    print("   • Search (CSV + PDF)")
+    print("   • Top Items")
+    print("   • Outlier Detection")
+    print("   • Bidder Comparison")
 
-        # Initialize agent
-        print_header("🤖 INITIALIZING AGENT")
+    return agent
 
-        log.info("🤖 Initializing Claude agent...")
-        if not projects:
-            from src.data.models import Project
-            projects = [Project(proj_id="DOCS", proj_name="Uploaded Documents", items=[])]
-            log.debug("Created dummy project for documents without CSV data")
 
-        log.debug(f"Creating agent with {len(projects)} projects and vector_store")
-        agent = AgentFactory.create_agent(
-            projects=projects,
-            vector_store=vector_store,
-            embedding_client=embedding_client,
-            allow_fallback=True
-        )
-        executor_type = type(agent).__name__
-        log.info(f"✅ Agent ready: {executor_type} with {len(agent.tools)} tools")
+def _handle_help_command():
+    """Display help information."""
+    print("\n" + "=" * 90)
+    print("HELP")
+    print("=" * 90)
+    print("\nClaude can analyze your documents:")
+    print("\n📊 CSV Data:")
+    print("  • Find top/bottom items")
+    print("  • Detect price anomalies")
+    print("  • Compare bidders")
+    print("  • Statistical analysis")
+    print("\n📄 PDF Documents:")
+    print("  • Search for information")
+    print("  • Extract specifications")
+    print("  • Answer questions")
+    print("\nJust ask in natural language!")
+    print("=" * 90 + "\n")
 
-        print(f"✅ Agent ready with {len(agent.tools)} tools")
-        print("   • Search (CSV + PDF)")
-        print("   • Top Items")
-        print("   • Outlier Detection")
-        print("   • Bidder Comparison")
 
+def _handle_examples_command():
+    """Display example queries."""
+    print("\n" + "=" * 90)
+    print("EXAMPLE QUERIES")
+    print("=" * 90)
+    examples = [
+        "What are the top 5 most expensive bid items?",
+        "Are there any pricing anomalies?",
+        "Compare bidders on MOBILIZATION",
+        "What does the plan say about drainage?",
+        "What are the key project specifications?",
+        "Which items have highest price variance?",
+        "Summarize the plan content",
+        "Find information about pavement marking",
+    ]
+    for i, ex in enumerate(examples, 1):
+        print(f"  {i}. {ex}")
+    print("=" * 90 + "\n")
+
+
+def _execute_query(query: str, agent, log) -> bool:
+    """Execute a single query. Returns True if successful, False on interrupt."""
+    log.debug(f"🔄 Executing agent.query() for: {query[:80]}")
+    print("\n🤖 Claude is analyzing...\n")
+    print("-" * 90)
+
+    try:
+        log.info("🔧 Agent processing query...")
+        result = agent.query(query)
+        log.info("✅ Agent returned response")
+        log.debug(f"Response length: {len(result)} characters")
+        print(result)
+        print("-" * 90 + "\n")
+        return True
     except KeyboardInterrupt:
-        print("\n❌ Initialization interrupted")
-        import sys
-        sys.exit(1)
-    except ValueError as e:
-        print(f"\n{str(e)}\n")
-        import sys
-        sys.exit(1)
+        log.warning("Query interrupted by user")
+        print("\n❌ Query interrupted\n")
+        return False
     except Exception as e:
         error_str = str(e)
+        is_debug = os.getenv("LOG_LEVEL", "INFO").upper() == "DEBUG"
+        log.error(f"❌ Query execution failed: {error_str}", exc_info=is_debug)
         if "credit" in error_str.lower() or "quota" in error_str.lower():
-            print(f"\n⚠️  API INITIALIZATION ERROR\n")
-            print(f"❌ {error_str}\n")
-            print("💡 Using mock embeddings instead.\n")
+            print(f"\n⚠️  API Credits/Quota Exceeded\n")
+            print("Using mock embeddings - search may be less accurate.")
         else:
-            print(f"❌ Error: {e}")
-            import traceback
-            traceback.print_exc()
-        import sys
-        sys.exit(1)
+            print(f"❌ Error: {e}\n")
+        return True
 
-    # Interactive conversation loop
+
+def _run_interactive_loop(agent, log) -> None:
+    """Run the main interactive query loop."""
     print_header("💬 ANALYSIS MODE")
     print("\n💡 Ask questions about your documents!")
     print("\nExamples:")
@@ -296,68 +329,15 @@ def main():
 
             if query.lower() == "help":
                 log.debug("User requested help")
-                print("\n" + "=" * 90)
-                print("HELP")
-                print("=" * 90)
-                print("\nClaude can analyze your documents:")
-                print("\n📊 CSV Data:")
-                print("  • Find top/bottom items")
-                print("  • Detect price anomalies")
-                print("  • Compare bidders")
-                print("  • Statistical analysis")
-                print("\n📄 PDF Documents:")
-                print("  • Search for information")
-                print("  • Extract specifications")
-                print("  • Answer questions")
-                print("\nJust ask in natural language!")
-                print("=" * 90 + "\n")
+                _handle_help_command()
                 continue
 
             if query.lower() == "examples":
                 log.debug("User requested examples")
-                print("\n" + "=" * 90)
-                print("EXAMPLE QUERIES")
-                print("=" * 90)
-                examples = [
-                    "What are the top 5 most expensive bid items?",
-                    "Are there any pricing anomalies?",
-                    "Compare bidders on MOBILIZATION",
-                    "What does the plan say about drainage?",
-                    "What are the key project specifications?",
-                    "Which items have highest price variance?",
-                    "Summarize the plan content",
-                    "Find information about pavement marking",
-                ]
-                for i, ex in enumerate(examples, 1):
-                    print(f"  {i}. {ex}")
-                print("=" * 90 + "\n")
+                _handle_examples_command()
                 continue
 
-            # Execute query
-            log.debug(f"🔄 Executing agent.query() for: {query[:80]}")
-            print("\n🤖 Claude is analyzing...\n")
-            print("-" * 90)
-
-            try:
-                log.info("🔧 Agent processing query...")
-                result = agent.query(query)
-                log.info("✅ Agent returned response")
-                log.debug(f"Response length: {len(result)} characters")
-                print(result)
-                print("-" * 90 + "\n")
-
-            except KeyboardInterrupt:
-                log.warning("Query interrupted by user")
-                print("\n❌ Query interrupted\n")
-            except Exception as e:
-                error_str = str(e)
-                is_debug = os.getenv("LOG_LEVEL", "INFO").upper() == "DEBUG"
-                log.error(f"❌ Query execution failed: {error_str}", exc_info=is_debug)
-                if "credit" in error_str.lower() or "quota" in error_str.lower():
-                    print(f"\n⚠️  API Credits/Quota Exceeded\n")
-                    print("Using mock embeddings - search may be less accurate.")
-                else:
-                    print(f"❌ Error: {e}\n")
+            _execute_query(query, agent, log)
 
         except KeyboardInterrupt:
             print("\n\n👋 Goodbye!\n")
@@ -365,7 +345,9 @@ def main():
         except Exception as e:
             print(f"\n❌ Error: {e}\n")
 
-    # Cleanup
+
+def _cleanup(upload_dir: str, db_path: str, log) -> None:
+    """Clean up temporary resources."""
     log.info("🧹 Cleaning up resources...")
     log.debug(f"Removing temporary directory: {upload_dir}")
     shutil.rmtree(upload_dir, ignore_errors=True)
@@ -377,6 +359,67 @@ def main():
     log.info("=" * 80)
     log.info("✅ Agent session completed successfully")
     log.info("=" * 80)
+
+
+def main():
+    global log
+
+    # Initialize logging at runtime (not at import time)
+    initialize_logging()
+    log = get_logger("construction_agent")
+
+    print_header("🤖 CONSTRUCTION ESTIMATING AGENT")
+
+    log.info("=" * 80)
+    log.info(f"Starting Construction Agent | Log Level: {os.getenv('LOG_LEVEL', 'INFO')}")
+    log.info(f"Config: LOG_LEVEL={os.getenv('LOG_LEVEL', 'INFO')}, LOG_FILE={os.getenv('LOG_FILE')}")
+    log.info("=" * 80)
+
+    # Load documents
+    log.info("📄 Starting document loading process...")
+    upload_dir, uploaded_files, projects = load_documents()
+    log.debug(f"Document loading complete: {len(uploaded_files)} files, {len(projects)} projects")
+
+    # Create temporary database
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+        db_path = f.name
+    log.debug(f"Created temporary database: {db_path}")
+
+    try:
+        # Index documents
+        vector_store, embedding_client = _index_documents(
+            upload_dir, uploaded_files, db_path, log
+        )[:2]
+
+        # Initialize agent
+        agent = _initialize_agent(projects, vector_store, embedding_client, log)
+
+    except KeyboardInterrupt:
+        print("\n❌ Initialization interrupted")
+        import sys
+        sys.exit(1)
+    except ValueError as e:
+        print(f"\n{str(e)}\n")
+        import sys
+        sys.exit(1)
+    except Exception as e:
+        error_str = str(e)
+        if "credit" in error_str.lower() or "quota" in error_str.lower():
+            print(f"\n⚠️  API INITIALIZATION ERROR\n")
+            print(f"❌ {error_str}\n")
+            print("💡 Using mock embeddings instead.\n")
+        else:
+            print(f"❌ Error: {e}")
+            import traceback
+            traceback.print_exc()
+        import sys
+        sys.exit(1)
+
+    # Run interactive loop
+    _run_interactive_loop(agent, log)
+
+    # Cleanup
+    _cleanup(upload_dir, db_path, log)
 
 
 if __name__ == "__main__":
