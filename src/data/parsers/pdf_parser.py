@@ -17,7 +17,7 @@ class PDFParser:
         self.verbose = verbose
         self.use_ocr = self._check_ocr_available()
 
-    def _extract_text(self, file_path: str) -> str:
+    def extract_text(self, file_path: str) -> str:
         """Extract text from PDF using PyPDF2, fallback to OCR."""
         try:
             # Try PyPDF2 first (fast, works for text-native PDFs)

@@ -28,7 +28,7 @@ class PDFIndexer(DocumentIndexer):
 
         try:
             parser = PDFParser(verbose=True)
-            text = parser._extract_text(pdf_path)
+            text = parser.extract_text(pdf_path)
 
             if not text or not text.strip():
                 logger.warning(f"No text extracted from {pdf_path}")
