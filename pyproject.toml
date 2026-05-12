@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "construction-agent"
 version = "1.0.0"
 description = "AI-powered agent for construction bid analysis"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 authors = [
     {name = "Cristiano dos Santos Lemos", email = "cris.cjinf@gmail.com"}
 ]
@@ -47,6 +47,12 @@ api = [
 [project.scripts]
 agent = "src.main:main"
 agent-demo = "src.demo:main"
+
+[tool.setuptools]
+packages = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "."
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
