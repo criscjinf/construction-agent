@@ -73,3 +73,5 @@ Thumbs.db
 # Embeddings cache (can be large)
 *.embedding
 embeddings/
+
+data/

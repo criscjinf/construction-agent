@@ -8,7 +8,6 @@ import pytest
 from pathlib import Path
 
 from src.data.parsers import CSVParser
-from src.data.loaders import DataLoader
 from src.data.models import Project, BidItem
 
 
@@ -189,49 +188,6 @@ class TestCSVParserEdgeCases:
         projects = parser.parse(str(sample_csv_normal))
 
         assert len(projects) > 0
-
-
-class TestDataLoaderFactory:
-    """Tests for DataLoader factory pattern."""
-
-    def test_dataloader_detects_csv_format(self, sample_csv_normal):
-        """Test DataLoader auto-detects CSV format."""
-        projects = DataLoader.load(str(sample_csv_normal))
-
-        assert len(projects) > 0
-        assert isinstance(projects[0], Project)
-
-    def test_dataloader_raises_on_unsupported_format(self):
-        """Test DataLoader rejects unsupported formats."""
-        with pytest.raises((ValueError, FileNotFoundError)):
-            # Try both - unsupported format might be checked before or after file existence
-            DataLoader.load("file.xyz")
-
-    def test_dataloader_raises_on_missing_file(self):
-        """Test DataLoader raises error for missing file."""
-        with pytest.raises(FileNotFoundError):
-            DataLoader.load("/nonexistent/file.csv")
-
-    def test_dataloader_with_real_data(self):
-        """Test DataLoader with actual project CSV file."""
-        real_csv = Path("./data/sample_bid_tabulation.csv")
-
-        if real_csv.exists():
-            projects = DataLoader.load(str(real_csv))
-
-            # Verify loaded data
-            assert len(projects) > 0
-
-            for project in projects:
-                assert project.proj_id is not None
-                assert len(project.bidders) > 0
-                assert len(project.items) > 0
-
-                # Verify items are valid
-                for item in project.items:
-                    assert item.item_no is not None
-                    assert item.unit_price >= 0
-                    assert item.qty >= 0
 
 
 class TestBidItemValidation:

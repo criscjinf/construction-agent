@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv(".env")
 
 from pathlib import Path
-from src.data.pdf_parser import PDFParser
+from src.data.parsers import PDFParser
 
 print("=" * 80)
 print("🧪 TESTE DE EXTRAÇÃO DE PDFs")

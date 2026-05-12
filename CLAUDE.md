@@ -125,7 +125,7 @@
 - ✅ **Injection prevention**: Parameterize all LLM prompts (no f-strings for user input)
 - ✅ **Error handling**: Catch exceptions, return generic message, log full error internally
 - ✅ **API keys**: Store in .env, never commit to git
-- ✅ **Dependencies**: Pin versions in requirements.txt
+- ✅ **Dependencies**: Managed in pyproject.toml (modern PEP 517)
 - ✅ **Logging**: No sensitive data (don't log full CSV rows, API keys, etc)
 
 ## Architecture Decisions (Why/How)
@@ -180,8 +180,11 @@
 # Setup
 python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env  # Add your OpenAI/Anthropic keys
+pip install -e .              # Install project + dependencies
+pip install -e ".[dev]"       # Include dev dependencies (pytest, etc)
+
+# Configuration
+cp .env.example .env          # Add your OpenAI/Anthropic keys
 
 # Development
 # Make changes → Run tests → Verify manually
@@ -189,11 +192,11 @@ cp .env.example .env  # Add your OpenAI/Anthropic keys
 # Testing
 pytest tests/ -v --cov=src --cov-report=html
 
-# Security audit
-# /security command before final submission
+# Run agent (CLI)
+python src/main.py analyze --file data/sample_bid_tabulation.csv
 
-# Run agent
-python src/main.py  # Interactive CLI
+# Run agent (interactive)
+python -m src.main analyze --file data/sample_bid_tabulation.csv
 ```
 
 ## Files to Create (Per Phase)

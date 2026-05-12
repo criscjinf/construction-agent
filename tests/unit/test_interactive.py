@@ -14,8 +14,7 @@ from dotenv import load_dotenv
 load_dotenv(".env")
 
 try:
-    from src.data.loaders import DataLoader
-    from src.vectorstore.storage import SQLiteVectorStore
+    from src.data.parsers import CSVParser
     from src.agent.core import AgentExecutor
 except ImportError:
     print("❌ Error: Cannot import modules. Make sure you're in the project root.")
@@ -36,7 +35,7 @@ def main():
         sys.exit(1)
 
     try:
-        projects = DataLoader.load(csv_path)
+        projects = CSVParser().parse(csv_path)
         print(f"✅ Loaded {len(projects)} projects with {sum(len(p.items) for p in projects)} items")
     except Exception as e:
         print(f"❌ Error loading CSV: {e}")
@@ -44,13 +43,8 @@ def main():
 
     # Initialize agent
     print("\n🔧 Initializing agent...")
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-        db_path = f.name
 
     try:
-        # Use vector store WITHOUT indexing (faster startup)
-        vector_store = SQLiteVectorStore(db_path=db_path)
-
         # Create agent with vector_store=None for instant startup
         # This disables search tool but keeps other 3 tools working
         agent = AgentExecutor(projects=projects, vector_store=None)
@@ -155,9 +149,6 @@ def main():
         except Exception as e:
             print(f"\n❌ Error: {e}\n")
 
-    # Cleanup
-    if os.path.exists(db_path):
-        os.remove(db_path)
 
 
 def _process_query(agent: AgentExecutor, query: str) -> None:

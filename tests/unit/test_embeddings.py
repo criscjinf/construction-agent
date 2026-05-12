@@ -24,33 +24,31 @@ else:
 
 print("\n" + "=" * 80)
 
-# Test DocumentLoader decision
+# Test DocumentLoader with factory
 from src.data.document_loader import DocumentLoader
-from src.vectorstore.storage import SQLiteVectorStore
-import tempfile
+from src.data.indexers import IndexersFactory
+from src.vectorstore.storage import MockVectorStore
+from src.vectorstore.embeddings import OpenAIEmbeddingClient, MockEmbeddingClient
 
 print("\n📊 Testing DocumentLoader initialization...\n")
 
-with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-    db_path = f.name
+vector_store = MockVectorStore()
 
-vector_store = SQLiteVectorStore(db_path=db_path)
-
-# With real key
-print("🔄 Creating DocumentLoader with API key available...")
-use_mock = not bool(openai_key)
-doc_loader = DocumentLoader(vector_store=vector_store, use_mock_embeddings=use_mock)
-
-if use_mock:
-    print("   ❌ Using: MOCK embeddings")
-    print("   Embedding client type:", type(doc_loader.embedding_client).__name__)
-else:
+# Determine which embedding client to use
+print("🔄 Creating DocumentLoader with factory...")
+if openai_key:
     print("   ✅ Using: REAL OpenAI embeddings")
-    print("   Embedding client type:", type(doc_loader.embedding_client).__name__)
+    embedding_client = OpenAIEmbeddingClient()
+    embedding_type = "OpenAI"
+else:
+    print("   ❌ Using: MOCK embeddings")
+    embedding_client = MockEmbeddingClient()
+    embedding_type = "Mock"
+
+indexers_factory = IndexersFactory(vector_store=vector_store, embedding_client=embedding_client)
+doc_loader = DocumentLoader(indexers_factory=indexers_factory)
+
+print(f"   Embedding client type: {type(embedding_client).__name__}")
 
 print("\n" + "=" * 80)
 print("✅ Test complete\n")
-
-# Cleanup
-import shutil
-os.remove(db_path)

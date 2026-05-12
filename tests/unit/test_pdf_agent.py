@@ -13,10 +13,12 @@ from dotenv import load_dotenv
 load_dotenv(".env")
 
 try:
-    from src.data.loaders import DataLoader
-    from src.vectorstore.storage import SQLiteVectorStore
+    from src.data.parsers import CSVParser
+    from src.vectorstore.storage import MockVectorStore
+    from src.vectorstore.embeddings import MockEmbeddingClient
     from src.agent.core import AgentExecutor
     from src.data.document_loader import DocumentLoader
+    from src.data.indexers import IndexersFactory
 except ImportError:
     print("❌ Error: Cannot import modules")
     sys.exit(1)
@@ -36,7 +38,7 @@ def main():
         sys.exit(1)
 
     try:
-        projects = DataLoader.load(csv_path)
+        projects = CSVParser().parse(csv_path)
         print(f"✅ Loaded {len(projects)} projects with {sum(len(p.items) for p in projects)} items")
     except Exception as e:
         print(f"❌ Error loading CSV: {e}")
@@ -44,14 +46,15 @@ def main():
 
     # Initialize vector store and index documents
     print("\n📄 Indexing documents (CSV + PDFs)...")
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-        db_path = f.name
 
     try:
-        vector_store = SQLiteVectorStore(db_path=db_path)
+        # Use mock embeddings for fast testing (no OpenAI API calls)
+        embedding_client = MockEmbeddingClient()
+        vector_store = MockVectorStore()
 
-        # Load and index all documents with MOCK embeddings (fast, no API calls)
-        doc_loader = DocumentLoader(vector_store=vector_store, use_mock_embeddings=True)
+        # Load and index all documents with mock embeddings
+        indexers_factory = IndexersFactory(vector_store=vector_store, embedding_client=embedding_client)
+        doc_loader = DocumentLoader(indexers_factory=indexers_factory)
         results = doc_loader.load_all_documents("data")
 
         print(f"✅ Indexing complete:")
@@ -63,7 +66,7 @@ def main():
 
         # Initialize agent with indexed documents
         print("\n🤖 Initializing agent...")
-        agent = AgentExecutor(projects=projects, vector_store=vector_store)
+        agent = AgentExecutor(projects=projects, vector_store=vector_store, embedding_client=embedding_client)
         print(f"✅ Agent ready with {len(agent.tools)} tools")
         print("   Available: Search (PDFs + CSV), Top Items, Outlier Detection, Bidder Comparison")
 
@@ -127,11 +130,6 @@ def main():
             break
         except Exception as e:
             print(f"\n❌ Error: {e}\n")
-
-    # Cleanup
-    if os.path.exists(db_path):
-        os.remove(db_path)
-
 
 if __name__ == "__main__":
     main()

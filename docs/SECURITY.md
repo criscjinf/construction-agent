@@ -73,7 +73,7 @@ logger.info(f"CSV data: {csv_rows}")  # ❌ Would be bad
 ### 6. Security Misconfiguration
 **Status**: ✅ PASS
 
-- ✅ Dependencies pinned in requirements.txt
+- ✅ Dependencies managed in pyproject.toml (PEP 517)
 - ✅ Debug mode disabled by default (config.py: debug=False)
 - ✅ Log level defaults to INFO (not DEBUG)
 - ✅ No hardcoded credentials
@@ -108,7 +108,7 @@ inp = DetectOutliersInput(**user_data)  # Raises ValueError if invalid
 ### 9. Using Components with Known Vulnerabilities
 **Status**: ✅ PASS
 
-- ✅ Pinned versions in requirements.txt
+- ✅ Versions managed via pyproject.toml (modern standard)
 - ✅ No deprecated packages
 - ✅ Dependencies checked: pandas, pydantic, anthropic, openai all current
 
