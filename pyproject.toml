@@ -44,6 +44,10 @@ api = [
     "uvicorn>=0.24.0",
 ]
 
+[project.scripts]
+agent = "src.main:main"
+agent-demo = "src.demo:main"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
