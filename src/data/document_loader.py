@@ -41,15 +41,17 @@ class DocumentLoader:
             return 0
         return indexer.load_and_index(file_path)
 
-    def load_folder(self, folder_path: str) -> tuple[list[str], dict]:
+    @staticmethod
+    def discover_files(folder_path: str) -> tuple[list[str], dict]:
         """
-        Load all CSV and PDF files from a folder.
+        Discover all CSV and PDF files in a folder without requiring indexers.
+        Static method for lightweight file discovery.
 
         Args:
             folder_path: Path to folder containing documents
 
         Returns:
-            Tuple of (file_paths, results) where results contains counts and errors
+            Tuple of (file_paths, results) with counts and errors
         """
         data_path = Path(folder_path)
 

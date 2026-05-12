@@ -151,29 +151,22 @@ def _parse_csv_files(file_paths: list[str]) -> list:
 def load_folder(upload_dir: str) -> tuple[list[str], list]:
     """
     Load folder of documents. Returns (file_paths, projects).
-    Orchestrates validation, file discovery, copying, and parsing.
+    Orchestrates: validation → discovery → copying → parsing.
     """
     from src.data.document_loader import DocumentLoader
-    from src.data.indexers import IndexersFactory
-    from src.vectorstore.embeddings import MockEmbeddingClient
-    from src.vectorstore.storage import SQLiteVectorStore
 
     # Get and validate folder path
     folder_path = _validate_folder_path()
     if not folder_path:
         return [], []
 
-    # Create temporary store to discover files
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-        temp_db = f.name
-
     try:
-        # Discover files in folder
-        vector_store = SQLiteVectorStore(db_path=temp_db)
-        embedding_client = MockEmbeddingClient()
-        indexers_factory = IndexersFactory(vector_store=vector_store, embedding_client=embedding_client)
-        loader = DocumentLoader(indexers_factory=indexers_factory)
-        file_paths, results = loader.load_folder(folder_path)
+        # Discover files in folder (lightweight, no stores needed)
+        file_paths, results = DocumentLoader.discover_files(folder_path)
+
+        if not file_paths:
+            print(f"❌ No CSV or PDF files found in {folder_path}")
+            return [], []
 
         # Copy files and parse projects
         imported_files = _copy_folder_files(upload_dir, file_paths)
@@ -189,11 +182,6 @@ def load_folder(upload_dir: str) -> tuple[list[str], list]:
     except Exception as e:
         print(f"❌ Error: {e}")
         return [], []
-
-    finally:
-        # Clean up temporary DB
-        if os.path.exists(temp_db):
-            os.remove(temp_db)
 
 
 def load_documents():
