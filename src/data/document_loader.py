@@ -41,20 +41,37 @@ class DocumentLoader:
             return 0
         return indexer.load_and_index(file_path)
 
-    def load_all_documents(self, data_dir: str = "data") -> dict:
-        """Load all CSV and PDF files from a directory."""
-        data_path = Path(data_dir)
+    def load_folder(self, folder_path: str) -> tuple[list[str], dict]:
+        """
+        Load all CSV and PDF files from a folder.
+
+        Args:
+            folder_path: Path to folder containing documents
+
+        Returns:
+            Tuple of (file_paths, results) where results contains counts and errors
+        """
+        data_path = Path(folder_path)
+
+        if not data_path.exists():
+            logger.error(f"Folder not found: {folder_path}")
+            return [], {"csv": 0, "pdf": 0, "errors": [f"Folder not found: {folder_path}"]}
+
+        if not data_path.is_dir():
+            logger.error(f"Not a directory: {folder_path}")
+            return [], {"csv": 0, "pdf": 0, "errors": [f"Not a directory: {folder_path}"]}
+
+        file_paths = []
         results = {"csv": 0, "pdf": 0, "errors": []}
 
+        # Find all CSV and PDF files
         for pattern, doc_type in [("*.csv", "csv"), ("*.pdf", "pdf")]:
             for file_path in data_path.glob(pattern):
                 try:
-                    indexer = self.factory.get_indexer(str(file_path))
-                    if indexer:
-                        count = indexer.load_and_index(str(file_path))
-                        results[doc_type] += count
+                    file_paths.append(str(file_path))
+                    results[doc_type] += 1
                 except Exception as e:
-                    logger.error(f"Error loading {file_path}: {e}")
+                    logger.error(f"Error processing {file_path}: {e}")
                     results["errors"].append(str(file_path))
 
-        return results
+        return file_paths, results

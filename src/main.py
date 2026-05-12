@@ -86,9 +86,90 @@ def upload_file(upload_dir: str) -> tuple[str, str]:
             print(f"❌ Error: {e}")
 
 
+def load_folder(upload_dir: str) -> tuple[list[str], list]:
+    """
+    Prompt user to select a folder and load all CSV/PDF files.
+    Returns: (file_paths, projects)
+    """
+    from src.data.document_loader import DocumentLoader
+    from src.data.indexers import IndexersFactory
+    from src.vectorstore.embeddings import MockEmbeddingClient
+    from src.vectorstore.storage import SQLiteVectorStore
+
+    print("\n📁 FOLDER LOADING")
+    print("-" * 90)
+
+    while True:
+        folder_path = input("📂 Enter folder path (or 'cancel'): ").strip()
+
+        if folder_path.lower() == "cancel":
+            return [], []
+
+        path = Path(folder_path)
+
+        # Check folder exists
+        if not path.exists():
+            print(f"❌ Folder not found: {folder_path}")
+            continue
+
+        if not path.is_dir():
+            print(f"❌ Not a folder: {folder_path}")
+            continue
+
+        # Create temporary vector store for CSV parsing
+        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+            temp_db = f.name
+
+        try:
+            # Load all files from folder
+            vector_store = SQLiteVectorStore(db_path=temp_db)
+            embedding_client = MockEmbeddingClient()
+            indexers_factory = IndexersFactory(vector_store=vector_store, embedding_client=embedding_client)
+            loader = DocumentLoader(indexers_factory=indexers_factory)
+
+            file_paths, results = loader.load_folder(folder_path)
+
+            # Copy files to upload directory
+            imported_files = []
+            for file_path in file_paths:
+                try:
+                    src = Path(file_path)
+                    dst = Path(upload_dir) / src.name
+                    shutil.copy(str(src), str(dst))
+                    imported_files.append(str(dst))
+                except Exception as e:
+                    print(f"   ⚠️  Error copying {src.name}: {e}")
+
+            # Parse CSV files for project data
+            projects = []
+            for file_path in imported_files:
+                if file_path.lower().endswith('.csv'):
+                    try:
+                        new_projects = CSVParser().parse(file_path)
+                        projects.extend(new_projects)
+                    except Exception as e:
+                        print(f"   ⚠️  Error parsing {Path(file_path).name}: {e}")
+
+            # Clean up temporary DB
+            if os.path.exists(temp_db):
+                os.remove(temp_db)
+
+            print(f"\n✅ Loaded folder: {folder_path}")
+            print(f"   • CSV files: {results['csv']}")
+            print(f"   • PDF files: {results['pdf']}")
+            print(f"   • Total files: {results['csv'] + results['pdf']}")
+
+            return imported_files, projects
+
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            if os.path.exists(temp_db):
+                os.remove(temp_db)
+
+
 def load_documents():
     """
-    Upload documents loop: let user upload multiple files or start analysis.
+    Document loading menu: upload files, load folder, or start analysis.
     Returns: (upload_dir, uploaded_files, projects)
     """
     upload_dir = tempfile.mkdtemp(prefix="construction_agent_")
@@ -100,9 +181,10 @@ def load_documents():
     while True:
         print("\nOptions:")
         print("  1. Upload a file (auto-detect CSV/PDF)")
-        print("  2. Start analysis")
+        print("  2. Load folder")
+        print("  3. Start analysis")
 
-        choice = input("\n👉 Choose (1-2): ").strip()
+        choice = input("\n👉 Choose (1-3): ").strip()
 
         if choice == "1":
             file_path, file_type = upload_file(upload_dir)
@@ -121,6 +203,13 @@ def load_documents():
                     print(f"   ✅ PDF will be indexed during analysis")
 
         elif choice == "2":
+            folder_files, folder_projects = load_folder(upload_dir)
+            if folder_files:
+                uploaded_files.extend(folder_files)
+                projects.extend(folder_projects)
+                print(f"   ✅ Folder loaded: {len(folder_files)} files")
+
+        elif choice == "3":
             break
         else:
             print("❌ Invalid option")
@@ -134,7 +223,6 @@ def load_documents():
 
 
 def _index_documents(
-    upload_dir: str,
     uploaded_files: list[str],
     db_path: str,
     log
@@ -388,7 +476,7 @@ def main():
     try:
         # Index documents
         vector_store, embedding_client = _index_documents(
-            upload_dir, uploaded_files, db_path, log
+            uploaded_files, db_path, log
         )[:2]
 
         # Initialize agent
