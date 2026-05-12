@@ -4,7 +4,7 @@ This project uses **pyproject.toml** (PEP 517/518) for modern Python packaging.
 
 ## Prerequisites
 
-- Python 3.11+
+- Python 3.10 or higher (tested on 3.10.12, 3.11+)
 - pip (included with Python)
 
 ## Installation
@@ -85,17 +85,75 @@ LOG_LEVEL=INFO
 
 ## Running the Application
 
-### Entry Points (after `pip install -e .`)
+### Entry Points (Command Aliases)
+
+After `pip install -e .`, you can use these convenient command aliases defined in `pyproject.toml`:
+
+#### `agent` — Interactive Agent
 
 ```bash
-# Interactive agent (upload files or load from data/)
 agent
+```
 
-# Quick demo (auto-loads from data/ folder)
+**What it does:**
+- Opens interactive menu to upload CSV/PDF files OR load from `data/` folder
+- Indexes documents with real OpenAI embeddings (or mock if key not available)
+- Opens analysis shell where you can ask questions:
+  - "What are the top 5 most expensive items?"
+  - "Are there price outliers?"
+  - "Compare bidders on MOBILIZATION"
+- Commands: `help`, `examples`, `quit`
+
+**When to use**: When you have specific files to analyze or want to explore data interactively
+
+#### `agent-demo` — Automated Demo
+
+```bash
 agent-demo
 ```
 
-### Direct Python Execution
+**What it does:**
+- Automatically loads all files from `data/` folder
+- Indexes them with mock embeddings (fast, no API calls)
+- Runs 3 example queries automatically
+- Shows results and cleans up
+
+**When to use**: Quick demonstration of agent capabilities without uploading files
+
+---
+
+### How Entry Points Work
+
+**Entry points are shortcuts** defined in `pyproject.toml`:
+
+```toml
+[project.scripts]
+agent = "src.main:main"           # Maps 'agent' → runs src/main.py:main()
+agent-demo = "src.demo:main"      # Maps 'agent-demo' → runs src/demo.py:main()
+```
+
+**To make them work:**
+```bash
+pip install -e .    # This registers the aliases globally in your venv
+```
+
+**After installation:**
+```bash
+which agent         # Shows: /path/to/venv/bin/agent
+agent               # Runs the agent immediately
+```
+
+**They're just shortcuts for:**
+```bash
+python3 src/main.py   # Same as: agent
+python3 src/demo.py   # Same as: agent-demo
+```
+
+---
+
+### Direct Python Execution (No Installation Needed)
+
+If you don't want to use `pip install -e .`, you can run directly:
 
 ```bash
 # Interactive agent
@@ -104,23 +162,11 @@ python3 src/main.py
 # Quick demo
 python3 src/demo.py
 
-# Run specific tests
+# Run tests
 python3 -m pytest tests/ -v
 ```
 
-### What Each Command Does
-
-- **`agent`** — Interactive mode where you can:
-  - Upload CSV/PDF files
-  - Or load from `data/` folder
-  - Index documents with batch embeddings (optimized)
-  - Ask questions about your documents
-
-- **`agent-demo`** — Automated demo that:
-  - Auto-loads all files from `data/` folder
-  - Indexes them with mock embeddings
-  - Runs 3 example queries
-  - Cleans up and exits
+⚠️ **Note**: Entry point aliases (`agent`, `agent-demo`) only work after `pip install -e .`
 
 ## Testing
 
@@ -222,6 +268,28 @@ construction-agent/
 
 ## Troubleshooting
 
+### "command not found: agent" or "agent: command not found"
+
+The entry point aliases only work after installation. Make sure you:
+
+```bash
+# 1. Activate virtual environment
+source venv/bin/activate
+
+# 2. Install project in development mode
+pip install -e .
+
+# 3. Verify installation
+which agent              # Should show: /path/to/venv/bin/agent
+agent --help           # Should run the agent
+```
+
+**Alternative**: Run directly without installation:
+```bash
+python3 src/main.py    # Instead of: agent
+python3 src/demo.py    # Instead of: agent-demo
+```
+
 ### "ModuleNotFoundError: No module named 'src'"
 
 Make sure you installed the project:
@@ -231,13 +299,11 @@ pip install -e .
 
 ### "OPENAI_API_KEY not configured"
 
-Create `.env` file with valid API keys or use `--use-mock` flag.
-
-### "Click is not installed"
-
-Install development dependencies:
+The agent works with mock embeddings. If you want real embeddings:
 ```bash
-pip install -e ".[dev]"
+cp .env.example .env
+nano .env
+# Add: OPENAI_API_KEY=sk-...
 ```
 
 ### Tests fail with import errors
@@ -246,7 +312,7 @@ Ensure virtual environment is activated and project is installed:
 ```bash
 source venv/bin/activate
 pip install -e ".[dev]"
-pytest tests/
+pytest tests/ -v
 ```
 
 ## More Information

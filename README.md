@@ -2,7 +2,7 @@
 
 An AI-powered agent that analyzes construction bid data and project plans using adaptive data parsing, semantic search, statistical analysis, and Claude API tool-use patterns.
 
-**Status**: ✅ Complete (5 phases, 130 tests, 0 regressions)
+**Status**: ✅ Complete (5 phases, 120+ tests, 0 regressions)
 
 ---
 
@@ -15,12 +15,13 @@ An AI-powered agent that analyzes construction bid data and project plans using 
 git clone <repo-url>
 cd construction-agent
 
-# Create virtual environment
+# Create and activate virtual environment
 python3 -m venv venv
 source venv/bin/activate  # or: venv\Scripts\activate on Windows
 
-# Install dependencies
-pip install -r requirements.txt
+# Install project in development mode
+# This installs the project + dependencies + entry point aliases
+pip install -e .
 ```
 
 ### 2. Configure (Optional)
@@ -38,19 +39,24 @@ nano .env
 
 ### 3. Run
 
+After installing with `pip install -e .`, you can use these **command aliases**:
+
 ```bash
-# 🚀 Main command - interactive mode (upload or load from data/)
+# 🚀 Main interactive agent (upload files or load from data/)
 agent
-# or
-python3 src/main.py
 
 # Quick demo with data/ folder (auto-loaded)
 agent-demo
-# or
-python3 src/demo.py
 ```
 
-**→ See `docs/QUICK_START.md` for full walkthrough**
+Or run directly with Python (no installation needed):
+
+```bash
+python3 src/main.py    # Interactive agent
+python3 src/demo.py    # Demo mode
+```
+
+**→ See `SETUP.md` for detailed installation & `docs/QUICK_START.md` for full walkthrough**
 
 ---
 
