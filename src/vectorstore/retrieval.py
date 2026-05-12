@@ -6,8 +6,6 @@ Retrieval strategy: Fusion of semantic similarity and keyword overlap.
 
 import logging
 from typing import Optional
-from collections import Counter
-import math
 
 from src.vectorstore.storage import VectorStore
 from src.vectorstore.embeddings import EmbeddingClient

@@ -7,7 +7,6 @@ import logging
 import os
 import sys
 from pathlib import Path
-from datetime import datetime
 
 
 def setup_logging(debug: bool = False, log_file: str = None) -> logging.Logger:
