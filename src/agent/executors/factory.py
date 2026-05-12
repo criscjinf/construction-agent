@@ -19,7 +19,7 @@ class AgentFactory:
 
     @staticmethod
     def create_agent(
-        projects: list[Project],
+        projects: Optional[list[Project]] = None,
         vector_store: Optional[VectorStore] = None,
         embedding_client: Optional[EmbeddingClient] = None,
         prefer_mock: bool = False,
@@ -29,7 +29,7 @@ class AgentFactory:
         Create an agent executor with optional fallback.
 
         Args:
-            projects: List of loaded Project objects
+            projects: List of loaded Project objects (optional)
             vector_store: Vector store for semantic search (optional)
             embedding_client: Embedding client for vectors (optional)
             prefer_mock: If True, use MockAgentExecutor even if API available

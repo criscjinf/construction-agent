@@ -103,9 +103,10 @@ def main():
 
     # Initialize agent
     print("\n🤖 Initializing agent...")
-
-    if not projects:
-        projects = [Project(proj_id="DOCS", proj_name="Documents", items=[])]
+    if projects:
+        print(f"   📊 Using {len(projects)} projects from CSV data")
+    else:
+        print("   📄 No CSV projects. Agent will analyze documents only.")
 
     try:
         agent = AgentFactory.create_agent(

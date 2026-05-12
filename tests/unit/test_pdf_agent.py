@@ -16,7 +16,7 @@ try:
     from src.data.parsers import CSVParser
     from src.vectorstore.storage import MockVectorStore
     from src.vectorstore.embeddings import MockEmbeddingClient
-    from src.agent.core import AgentExecutor
+    from src.agent.executors import AgentFactory
     from src.data.document_loader import DocumentLoader
     from src.data.indexers import IndexersFactory
 except ImportError:
@@ -66,8 +66,13 @@ def main():
 
         # Initialize agent with indexed documents
         print("\n🤖 Initializing agent...")
-        agent = AgentExecutor(projects=projects, vector_store=vector_store, embedding_client=embedding_client)
-        print(f"✅ Agent ready with {len(agent.tools)} tools")
+        agent = AgentFactory.create_agent(
+            projects=projects,
+            vector_store=vector_store,
+            embedding_client=embedding_client,
+            prefer_mock=True
+        )
+        print(f"✅ Agent ready with {len(agent.tools)} tools (Mock mode)")
         print("   Available: Search (PDFs + CSV), Top Items, Outlier Detection, Bidder Comparison")
 
     except Exception as e:

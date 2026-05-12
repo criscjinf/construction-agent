@@ -15,7 +15,7 @@ load_dotenv(".env")
 
 try:
     from src.data.parsers import CSVParser
-    from src.agent.core import AgentExecutor
+    from src.agent.executors import AgentFactory
 except ImportError:
     print("❌ Error: Cannot import modules. Make sure you're in the project root.")
     sys.exit(1)
@@ -45,11 +45,15 @@ def main():
     print("\n🔧 Initializing agent...")
 
     try:
-        # Create agent with vector_store=None for instant startup
-        # This disables search tool but keeps other 3 tools working
-        agent = AgentExecutor(projects=projects, vector_store=None)
-        print(f"✅ Agent ready with {len(agent.tools)} tools")
-        print("   Note: Search tool disabled (no indexing). Use other 3 tools:")
+        # Create agent with prefer_mock=True for instant startup (no API calls)
+        agent = AgentFactory.create_agent(
+            projects=projects,
+            vector_store=None,
+            embedding_client=None,
+            prefer_mock=True
+        )
+        print(f"✅ Agent ready with {len(agent.tools)} tools (Mock mode)")
+        print("   Tools available:")
         print("     • Top Items (aggregation)")
         print("     • Outlier Detection")
         print("     • Bidder Comparison")
@@ -151,71 +155,13 @@ def main():
 
 
 
-def _process_query(agent: AgentExecutor, query: str) -> None:
-    """Process query and route to appropriate tool."""
-
-    # Analyze query intent
-    query_lower = query.lower()
-
-    if any(word in query_lower for word in ["top", "highest", "most expensive"]):
-        # Aggregation tool
-        print("\n🔧 Tool: Top Items (Aggregation)")
-        result = agent._tool_aggregate_items({
-            "metric": "unit_price",
-            "limit": 5,
-            "order": "desc"
-        })
+def _process_query(agent, query: str) -> None:
+    """Process query through agent."""
+    try:
+        result = agent.query(query)
         print(result)
-
-    elif any(word in query_lower for word in ["outlier", "suspicious", "unusual", "deviate", "anomal"]):
-        # Outlier detection tool
-        print("\n🔧 Tool: Outlier Detection")
-        prices = []
-        for proj in agent.projects:
-            for item in proj.items:
-                prices.append(item.unit_price)
-
-        result = agent._tool_detect_outliers({
-            "prices": prices[:50],
-            "method": "zscore",
-            "sensitivity": 2.0
-        })
-        print(result)
-
-    elif any(word in query_lower for word in ["compare", "spread", "across bidders", "difference"]):
-        # Comparison tool - try to find item number
-        print("\n🔧 Tool: Bidder Comparison")
-        # Default to MOBILIZATION (1031000)
-        item_no = "1031000"
-
-        # Try to extract item number from query
-        words = query.split()
-        for word in words:
-            if word.isdigit() and len(word) == 7:
-                item_no = word
-                break
-
-        result = agent._tool_compare_bidders({
-            "item_no": item_no
-        })
-        print(result)
-
-    else:
-        # Default: semantic search
-        if agent.vector_store:
-            print("\n🔧 Tool: Semantic Search")
-            result = agent._tool_search({
-                "query": query,
-                "limit": 5,
-                "threshold": 0.0
-            })
-            print(result)
-        else:
-            print("\n⚠️  Search tool not available (vector store disabled for faster startup)")
-            print("   Try these instead:")
-            print("     • 'top items'")
-            print("     • 'check for outliers'")
-            print("     • 'compare mobilization'")
+    except Exception as e:
+        print(f"❌ Error processing query: {e}")
 
 
 if __name__ == "__main__":

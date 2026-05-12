@@ -106,12 +106,10 @@ def _initialize_agent(projects: list, vector_store, embedding_client, log):
     print_header("🤖 INITIALIZING AGENT")
 
     log.info("🤖 Initializing Claude agent...")
-    if not projects:
-        from src.data.models import Project
-        projects = [Project(proj_id="DOCS", proj_name="Uploaded Documents", items=[])]
-        log.debug("Created dummy project for documents without CSV data")
-
-    log.debug(f"Creating agent with {len(projects)} projects and vector_store")
+    if projects:
+        log.debug(f"Creating agent with {len(projects)} projects from CSV data")
+    else:
+        log.debug("No CSV projects loaded. Agent will analyze documents only.")
     agent = AgentFactory.create_agent(
         projects=projects,
         vector_store=vector_store,

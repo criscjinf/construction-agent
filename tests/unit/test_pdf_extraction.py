@@ -18,7 +18,7 @@ for pdf_file in pdf_files:
     print(f"📄 {pdf_file.name} ({pdf_file.stat().st_size / 1024 / 1024:.1f}MB)")
     
     parser = PDFParser(verbose=False)
-    text = parser._extract_text(str(pdf_file))
+    text = parser.extract_text(str(pdf_file))
     
     if text:
         print(f"   ✅ Extraído: {len(text)} caracteres")

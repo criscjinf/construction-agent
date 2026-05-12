@@ -14,7 +14,7 @@ class BaseAgentExecutor(ABC):
 
     def __init__(
         self,
-        projects: list[Project],
+        projects: Optional[list[Project]] = None,
         vector_store: Optional[VectorStore] = None,
         embedding_client: Optional[EmbeddingClient] = None,
     ):
@@ -22,11 +22,11 @@ class BaseAgentExecutor(ABC):
         Initialize agent executor.
 
         Args:
-            projects: List of loaded Project objects
+            projects: List of loaded Project objects (optional)
             vector_store: Vector store for semantic search (optional)
             embedding_client: Embedding client for vectors (required if vector_store provided)
         """
-        self.projects = projects
+        self.projects = projects or []
         self.vector_store = vector_store
         self.embedding_client = embedding_client
         self.tools = get_tool_definitions()
