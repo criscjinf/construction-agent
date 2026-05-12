@@ -3,8 +3,8 @@
 ## ⚡ TL;DR (30 seconds)
 
 ```bash
-python3 scripts/run_agent.py
-# → Choose option 2 (load from data/)
+agent
+# → Choose option 2 (Start analysis)
 # → Ask questions
 ```
 
@@ -22,35 +22,39 @@ The agent provides **a single command** that does everything:
 
 ## 🎯 Complete Workflow
 
-### **Option 1: Use existing data in `data/` (RECOMMENDED)**
+### **Option 1: Load from `data/` folder (RECOMMENDED)**
 
 ```bash
-python3 scripts/run_agent.py
+agent
 ```
 
 Menu:
 ```
-👉 Choose (1-3): 2
+Options:
+  1. Upload a file (auto-detect CSV/PDF)
+  2. Start analysis
+
+👉 Choose (1-2): 2
 ```
 
 Result:
 ```
 ✅ Documents ready for indexing: 4
-📊 Indexing...
-✅ Agent ready with 4 tools
+📊 Indexing documents...
+   ✅ CSV indexed: 342 items (batch embedded)
+   ✅ PDF indexed: 127 chunks (batch embedded)
+✅ Indexing complete: 469 total
+🤖 Agent ready with 4 tools
 ```
 
 ### **Option 2: Upload new files**
 
 ```bash
-python3 scripts/run_agent.py
+agent
 ```
 
 Menu:
 ```
-👉 Choose (1-3): 1
-
-🚀 UPLOAD MODE
 Options:
   1. Upload a file (auto-detect CSV/PDF)
   2. Start analysis
@@ -61,20 +65,24 @@ Options:
    Detected type: CSV
    ✅ CSV parsed: 2 projects
 
+👉 Choose (1-2): 1
+[Upload more files, or...]
+
 👉 Choose (1-2): 2
+[Start analysis]
 ```
 
-### **Option 3: Upload + use existing data**
+### **Option 3: Use demo (automated)**
 
 ```bash
-python3 scripts/run_agent.py
+agent-demo
 ```
 
-Menu:
-```
-👉 Choose (1-3): 3
-[Uploads new files AND loads existing data/ simultaneously]
-```
+This automatically:
+- Loads all files from `data/`
+- Indexes them with batch embeddings
+- Runs 3 example queries
+- Cleans up and exits
 
 ---
 
@@ -177,12 +185,20 @@ P001, 1040000, TRAFFIC CONTROL, 2500, 15.50, Company A
 
 ---
 
-## 🚀 Available Scripts
+## 🚀 Available Commands
 
-| Script | Purpose | When to Use |
-|--------|---------|------------|
-| **`scripts/run_agent.py`** | Upload + indexing + analysis | **Always! This is the main one** |
-| `scripts/demo.py` | Automatic demo (no upload) | Quick test, no interaction |
+| Command | Purpose | When to Use |
+|---------|---------|------------|
+| **`agent`** | Interactive: upload files or load from data/ | **Daily use** |
+| **`agent-demo`** | Automated demo with example queries | Quick test, no interaction |
+
+Both commands are available after `pip install -e .`
+
+Or run directly:
+```bash
+python3 src/main.py   # Interactive
+python3 src/demo.py   # Demo
+```
 
 ---
 
@@ -190,21 +206,24 @@ P001, 1040000, TRAFFIC CONTROL, 2500, 15.50, Company A
 
 ```
 project/
-├── scripts/
-│   ├── run_agent.py     ⭐ Use this!
-│   └── demo.py          (automatic demo)
+├── src/
+│   ├── main.py          ⭐ Entry point (interactive agent)
+│   ├── demo.py          (automated demo)
+│   ├── data/            (parsers, loaders, indexers)
+│   ├── vectorstore/     (embeddings, storage, retrieval)
+│   ├── agent/           (Claude tools & agent executor)
+│   └── analysis/        (outliers, comparisons, aggregations)
 ├── data/                (put your CSVs and PDFs here)
 │   ├── sample_bid_tabulation.csv
 │   ├── plans.pdf
 │   └── ...
-├── src/
-│   ├── data/            (parsers, loaders)
-│   ├── vectorstore/     (embeddings, storage)
-│   ├── agent/           (Claude tool-use)
-│   └── analysis/        (outliers, comparisons)
-└── tests/               (130+ tests)
-    ├── unit/
-    └── integration/
+├── tests/               (130+ tests)
+│   ├── unit/
+│   └── integration/
+└── docs/
+    ├── QUICK_START.md
+    ├── EMBEDDINGS.md
+    └── ...
 ```
 
 ---
@@ -233,11 +252,18 @@ A: Copy CSVs/PDFs to the `data/` folder and load with option 2 or 3.
 
 ## 🔧 Troubleshooting
 
+### Error: "agent: command not found"
+```bash
+# Make sure project is installed
+pip install -e .
+```
+
 ### Error: "File not found"
 ```bash
-# Use absolute path
-python3 scripts/run_agent.py
-📂 Enter file path: /home/your_user/Documents/file.csv
+# Use absolute path when uploading
+/home/your_user/Documents/file.csv
+# or relative from project root
+data/your_file.csv
 ```
 
 ### Error: "Invalid format"
@@ -252,10 +278,16 @@ Limit: 100MB per file
 Solution: Split into smaller files
 ```
 
+### Agent responses are slow
+```
+Normal! First query takes ~5-10s (embeddings generation).
+Subsequent queries are instant (cache hit).
+```
+
 ### API Credits Exhausted
 ```
 If using real embeddings and credits run out:
-✅ System detects and switches to mock embeddings automatically
+✅ System auto-detects and switches to mock embeddings
 ✅ Search continues working (less accurate)
 ```
 
@@ -263,25 +295,32 @@ If using real embeddings and credits run out:
 
 ## 🎬 Next Steps
 
-1. **First time:**
+1. **First time (fastest way):**
    ```bash
-   cp .env.example .env
-   # (add your API keys if you want real embeddings)
-   python3 scripts/run_agent.py
-   # Choose: 2
+   agent
+   # When prompted:
+   # Choose: 2 (Start analysis)
    ```
 
-2. **With your data:**
+2. **With your own data:**
    ```bash
    cp your_file.csv data/
-   python3 scripts/run_agent.py
+   agent
    # Choose: 2
    ```
 
-3. **Upload without saving:**
+3. **Upload files without saving:**
    ```bash
-   python3 scripts/run_agent.py
+   agent
    # Choose: 1
+   # Enter file path
+   # Repeat for multiple files
+   # Then choose: 2 (Start analysis)
+   ```
+
+4. **Quick automated demo:**
+   ```bash
+   agent-demo
    ```
 
 ---
@@ -295,7 +334,18 @@ If using real embeddings and credits run out:
 
 ---
 
+## 🚀 Optimization Notes
+
+The agent uses **batch embeddings** for faster indexing:
+- ✅ 5-10x speedup on document indexing
+- ✅ Processes up to 1000 documents per API call
+- ✅ Automatic fallback to mock embeddings if credits exhausted
+
+See `docs/EMBEDDINGS.md` for technical details.
+
+---
+
 **Ready to get started?**
 ```bash
-python3 scripts/run_agent.py
+agent
 ```

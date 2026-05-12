@@ -39,11 +39,15 @@ nano .env
 ### 3. Run
 
 ```bash
-# 🚀 Main command - does everything
-python scripts/run_agent.py
+# 🚀 Main command - interactive mode (upload or load from data/)
+agent
+# or
+python3 src/main.py
 
 # Quick demo with data/ folder (auto-loaded)
-python scripts/demo.py
+agent-demo
+# or
+python3 src/demo.py
 ```
 
 **→ See `docs/QUICK_START.md` for full walkthrough**
@@ -161,19 +165,22 @@ pytest tests/ --cov=src --cov-report=html
 ```
 src/
 ├── data/          # CSV parsing, schema inference, validation
-├── vectorstore/   # Embeddings, storage, retrieval
+├── vectorstore/   # Embeddings, storage, retrieval (batch optimized)
 ├── analysis/      # Outliers, aggregations, comparisons
 ├── agent/         # Tools, orchestrator, prompts
-├── config.py      # Settings management
-└── main.py        # CLI entry point
-
-scripts/
-├── run_agent.py    # Main interactive agent (upload + indexation + analysis)
-└── demo.py         # Quick demo (auto-loads from data/, no upload)
+├── main.py        # Interactive agent (upload + indexing + analysis)
+└── demo.py        # Quick demo (auto-loads from data/, no upload)
 
 tests/
 ├── unit/          # Function logic tests
 └── integration/   # CRUD, retrieval, agent tests
+
+docs/
+├── QUICK_START.md # Getting started guide
+├── EMBEDDINGS.md  # Embedding optimization details
+├── EXAMPLES.md    # Real usage examples
+├── DEBUGGING.md   # Logging & debugging
+└── SECURITY.md    # Security audit
 ```
 
 ---
