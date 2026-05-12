@@ -1,9 +1,4 @@
-"""
-System prompts and example queries for construction bid analysis agent.
-
-Provides context for Claude to understand construction terminology
-and how to compose tool calls for complex queries.
-"""
+"""System prompt for construction bid analysis agent."""
 
 SYSTEM_PROMPT = """You are an AI assistant specialized in construction bid analysis. You help construction professionals and estimating teams analyze bid tabulations, project plans, and competitive pricing.
 
@@ -64,36 +59,6 @@ You have access to the following tools:
 - Show calculations when non-obvious
 - Always end with a summary statement
 
-## Example Queries
-
-These examples show how to decompose user queries:
-
-1. **Query**: "What are the top 5 most expensive bid items?"
-   → Use: aggregate_items(metric="unit_price", limit=5, order="desc")
-   → Cite: Item numbers, descriptions, prices
-   → Add context: "These are the highest unit prices in the bid"
-
-2. **Query**: "Are there any suspicious prices in this bid?"
-   → Use: detect_outliers(method="zscore") on all item prices
-   → Cite: Which items are outliers, their Z-scores
-   → Add context: "2.1σ above mean indicates statistical anomaly"
-
-3. **Query**: "How do bidders compare on MOBILIZATION?"
-   → Use: compare_bidders(item_no="1031000")  [MOBILIZATION is typically item 1031000]
-   → Cite: All bidders' prices, median, variance
-   → Add context: "Shows competitive pressure and outlier pricing"
-
-4. **Query**: "What are the drainage requirements from the plans?"
-   → Use: search(query="drainage requirements")
-   → Cite: Document excerpts with similarity scores
-   → Add context: "Found in specification section of plan set"
-
-5. **Query**: "Which items have the most competition between bidders?"
-   → Use: aggregate_items to get all items
-   → Use: compare_bidders on multiple items
-   → Return: Items ranked by coefficient of variation (competition level)
-   → Cite: Variance percentages showing tight vs loose pricing
-
 ## Handling Edge Cases
 
 - **No data**: "I don't have pricing data for that item"
@@ -115,50 +80,6 @@ Remember: In construction bidding, outliers are INTERESTING, not ERRORS. Your jo
 """
 
 
-EXAMPLE_QUERIES = [
-    {
-        "query": "What are the top 5 most expensive bid items?",
-        "tools": ["aggregate_items"],
-        "explanation": "Ranks items by unit price to identify high-cost line items that impact the overall bid"
-    },
-    {
-        "query": "Are there any items with unit prices that deviate significantly?",
-        "tools": ["detect_outliers"],
-        "explanation": "Finds statistical outliers using Z-score method (default 2.0σ) to highlight unusual pricing"
-    },
-    {
-        "query": "How do bidders compare on MOBILIZATION?",
-        "tools": ["compare_bidders"],
-        "explanation": "Compares all bidders' prices on a specific item to show competition and outlier bidders"
-    },
-    {
-        "query": "What does the plan set say about drainage?",
-        "tools": ["search"],
-        "explanation": "Semantic search on PDF content to find design requirements and specifications"
-    },
-    {
-        "query": "Which items have the most bidder competition?",
-        "tools": ["aggregate_items", "compare_bidders"],
-        "explanation": "Chains tools: first gets all items, then calculates competition level (variance) for each"
-    },
-    {
-        "query": "Top 3 items by extended amount, then check if any are outliers",
-        "tools": ["aggregate_items", "detect_outliers"],
-        "explanation": "Gets top items by total cost (qty × unit_price), then checks if prices are statistical outliers"
-    },
-    {
-        "query": "Compare prices for ASPHALT SURFACE across all bidders",
-        "tools": ["compare_bidders"],
-        "explanation": "Shows how different contractors priced the same work item with variance analysis"
-    },
-]
-
-
 def get_system_prompt() -> str:
-    """Return the system prompt for agent."""
+    """Get the system prompt for construction bid analysis agent."""
     return SYSTEM_PROMPT
-
-
-def get_example_queries() -> list[dict]:
-    """Return example queries for documentation/testing."""
-    return EXAMPLE_QUERIES

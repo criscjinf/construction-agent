@@ -21,6 +21,7 @@ from src.analysis.outliers import OutlierDetector, OutlierMethod, detect_price_o
 from src.analysis.aggregations import AggregationService
 from src.analysis.comparisons import ComparisonService
 from src.agent.tools import get_tool_definitions, DetectOutliersInput, AggregateItemsInput, CompareBiddersInput, SearchInput
+from src.agent.prompts import get_system_prompt
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +102,7 @@ class AgentExecutor:
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=2048,
-                system=self._get_system_prompt(),
+                system=get_system_prompt(),
                 tools=tool_defs,
                 messages=messages
             )
@@ -339,24 +340,3 @@ Top {inp.limit} {order_label} items by {inp.metric}:
         except Exception as e:
             logger.error(f"Failed to index projects in vector store: {e}")
 
-    def _get_system_prompt(self) -> str:
-        """Return system prompt for agent."""
-        return """You are an AI assistant for construction bid analysis. You help construction teams analyze bid tabulations and project plans.
-
-You have access to the following tools:
-1. detect_outliers - Find prices that deviate significantly from normal (Z-score or IQR method)
-2. aggregate_items - Get top bid items by any metric (unit price, quantity, extended amount)
-3. compare_bidders - Compare how different bidders priced a specific item
-4. search - Search bid data and PDF content using semantic + keyword search
-
-Instructions:
-- Always cite sources and explain your reasoning
-- Use outlier detection to find suspicious or interesting prices
-- For "top X items" queries, use aggregate_items
-- For bidder comparisons, use compare_bidders
-- For document search (e.g., "what does the plan say..."), use search
-- When multiple tools could help, chain them in one response
-- If you don't have data, say so explicitly
-- Format numbers with 2 decimal places for currency
-
-Remember: Construction bid analysis requires accuracy. Show your work and cite sources."""
