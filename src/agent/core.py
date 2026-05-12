@@ -14,10 +14,9 @@ from typing import Optional
 from anthropic import Anthropic
 
 from src.data.models import Project
-from src.data.loaders import DataLoader
-from src.vectorstore.embeddings import EmbeddingClient, MockEmbeddingClient
+from src.vectorstore.embeddings import EmbeddingClient
 from src.vectorstore.retrieval import HybridRetriever
-from src.vectorstore.storage import SQLiteVectorStore
+from src.vectorstore.storage import VectorStore
 from src.analysis.outliers import OutlierDetector, OutlierMethod, detect_price_outliers
 from src.analysis.aggregations import AggregationService
 from src.analysis.comparisons import ComparisonService
@@ -32,7 +31,8 @@ class AgentExecutor:
     def __init__(
         self,
         projects: list[Project],
-        vector_store: Optional[SQLiteVectorStore] = None,
+        vector_store: Optional[VectorStore] = None,
+        embedding_client: Optional[EmbeddingClient] = None,
         model: str = "claude-sonnet-4-6"
     ):
         """
@@ -41,6 +41,7 @@ class AgentExecutor:
         Args:
             projects: List of loaded Project objects
             vector_store: Vector store for semantic search (optional)
+            embedding_client: Embedding client for generating vectors (required if vector_store is provided)
             model: Claude model to use
         """
         # Get API key from environment
@@ -59,11 +60,14 @@ class AgentExecutor:
         self.client = Anthropic(api_key=api_key)
         self.projects = projects
         self.vector_store = vector_store
+        self.embedding_client = embedding_client
         self.model = model
         self.tools = get_tool_definitions()
 
         # Index projects in vector store for semantic search
         if self.vector_store:
+            if not self.embedding_client:
+                raise ValueError("embedding_client is required when vector_store is provided")
             self._index_projects_in_vector_store()
 
     def query(self, user_message: str, max_iterations: int = 5) -> str:
@@ -268,15 +272,12 @@ Top {inp.limit} {order_label} items by {inp.metric}:
         """Execute semantic search tool."""
         inp = SearchInput(**params)
 
-        if not self.vector_store:
-            return "Vector store not available for search"
-
-        # Use MockEmbeddingClient for search (consistent with indexing fallback)
-        embedding_client = MockEmbeddingClient()
+        if not self.vector_store or not self.embedding_client:
+            return "Vector store or embedding client not available for search"
 
         retriever = HybridRetriever(
             vector_store=self.vector_store,
-            embedding_client=embedding_client,
+            embedding_client=self.embedding_client,
             semantic_weight=0.7,
             keyword_weight=0.3
         )
@@ -308,15 +309,6 @@ Top {inp.limit} {order_label} items by {inp.metric}:
     def _index_projects_in_vector_store(self) -> None:
         """Index bid items from projects into vector store for semantic search."""
         try:
-            # Try to use real EmbeddingClient, fallback to Mock if API unavailable
-            embedding_client = None
-            try:
-                embedding_client = EmbeddingClient()
-                logger.info("Using OpenAI embeddings")
-            except Exception as e:
-                logger.warning(f"OpenAI API unavailable: {e}. Using MockEmbeddingClient instead.")
-                embedding_client = MockEmbeddingClient()
-
             count = 0
             for project in self.projects:
                 # Index each bid item
@@ -325,7 +317,7 @@ Top {inp.limit} {order_label} items by {inp.metric}:
                     text = f"{item.item_desc} - {item.unit} @ ${item.unit_price:.2f}"
 
                     try:
-                        embedding = embedding_client.embed_text(text)
+                        embedding = self.embedding_client.embed_text(text)
                         self.vector_store.insert(
                             doc_id=doc_id,
                             text=text,
