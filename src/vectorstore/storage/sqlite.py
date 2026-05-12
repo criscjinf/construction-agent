@@ -3,10 +3,10 @@
 import sqlite3
 import logging
 import json
-import math
 from typing import Optional
 
 from src.vectorstore.storage.base import VectorStore
+from src.vectorstore.similarity import VectorSimilarity
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +101,7 @@ class SQLiteVectorStore(VectorStore):
                     embedding = json.loads(embedding_json)
 
                     # Calculate cosine similarity
-                    similarity = self._cosine_similarity(query_embedding, embedding)
+                    similarity = VectorSimilarity.cosine(query_embedding, embedding)
 
                     # Filter by threshold
                     if similarity >= threshold:
@@ -189,18 +189,3 @@ class SQLiteVectorStore(VectorStore):
         except Exception as e:
             logger.error(f"Failed to get all doc IDs: {e}")
             raise
-
-    @staticmethod
-    def _cosine_similarity(vec1: list[float], vec2: list[float]) -> float:
-        """Calculate cosine similarity between two vectors."""
-        if len(vec1) != len(vec2):
-            raise ValueError(f"Vector dimensions don't match: {len(vec1)} vs {len(vec2)}")
-
-        dot_product = sum(a * b for a, b in zip(vec1, vec2))
-        magnitude1 = math.sqrt(sum(a * a for a in vec1))
-        magnitude2 = math.sqrt(sum(b * b for b in vec2))
-
-        if magnitude1 == 0 or magnitude2 == 0:
-            return 0.0
-
-        return dot_product / (magnitude1 * magnitude2)
