@@ -6,7 +6,6 @@ from typing import Optional
 import pandas as pd
 
 from src.data.models import Project, BidItem, Bidder, DataQualityReport
-from src.data.parsers.base import BaseParser
 from src.data.converters import ValueConverter
 
 logger = logging.getLogger(__name__)
@@ -44,7 +43,7 @@ class SchemaMapping:
         ])
 
 
-class CSVParser(BaseParser):
+class CSVParser:
     """CSV parser with adaptive schema inference."""
 
     def __init__(self, verbose: bool = False):
