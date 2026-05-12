@@ -150,8 +150,10 @@ def _parse_csv_files(file_paths: list[str]) -> list:
 
 def load_folder(upload_dir: str) -> tuple[list[str], list]:
     """
-    Load folder of documents. Returns (file_paths, projects).
-    Orchestrates: validation → discovery → copying → parsing.
+    Load folder: discover, copy, and parse CSV projects.
+    Indexing happens later in _index_documents() for all files together.
+
+    Orchestrates: validate → discover → copy → parse.
     """
     from src.data.document_loader import DocumentLoader
 
@@ -161,21 +163,24 @@ def load_folder(upload_dir: str) -> tuple[list[str], list]:
         return [], []
 
     try:
-        # Discover files in folder (lightweight, no stores needed)
+        # Discover files in folder (uses static method)
         file_paths, results = DocumentLoader.discover_files(folder_path)
 
         if not file_paths:
             print(f"❌ No CSV or PDF files found in {folder_path}")
             return [], []
 
-        # Copy files and parse projects
+        # Copy files to upload directory
         imported_files = _copy_folder_files(upload_dir, file_paths)
+
+        # Parse CSV files for project data
         projects = _parse_csv_files(imported_files)
 
         print(f"\n✅ Loaded folder: {folder_path}")
         print(f"   • CSV files: {results['csv']}")
         print(f"   • PDF files: {results['pdf']}")
         print(f"   • Total files: {results['csv'] + results['pdf']}")
+        print(f"   ℹ️  Files will be indexed in analysis phase")
 
         return imported_files, projects
 
