@@ -18,7 +18,7 @@ from src.logging_config import initialize_logging, get_logger
 log = None  # Will be initialized in main()
 
 try:
-    from src.data.parsers import CSVParser
+    from src.ui import FileLoader
     from src.data.document_loader import DocumentLoader
     from src.data.indexers import IndexersFactory
     from src.vectorstore.storage import SQLiteVectorStore
@@ -35,213 +35,6 @@ def print_header(title):
     print("\n" + "=" * 90)
     print(f"  {title}")
     print("=" * 90)
-
-
-def _validate_file_path(file_path: str) -> tuple[Path, str, float] | None:
-    """
-    Validate file path, extension, and size.
-    Returns: (Path, extension, size_mb) or None if invalid
-    """
-    path = Path(file_path)
-
-    if not path.exists():
-        print(f"❌ File not found: {file_path}")
-        return None
-
-    ext = path.suffix.lower()
-    if ext not in [".csv", ".pdf"]:
-        print(f"❌ Invalid format: '.{ext[1:] if ext else 'no extension'}'")
-        print(f"   Supported: .csv, .pdf")
-        return None
-
-    size_mb = path.stat().st_size / (1024 * 1024)
-    if size_mb > 100:
-        print(f"❌ File too large: {size_mb:.1f}MB (max 100MB)")
-        return None
-
-    return path, ext, size_mb
-
-
-def upload_file(upload_dir: str) -> tuple[str, str]:
-    """
-    Prompt user to upload a file.
-    Returns: (file_path, file_type) or ('', '') if cancelled
-    """
-    print("\n📁 FILE UPLOAD")
-    print("-" * 90)
-    print("Supported formats: CSV, PDF")
-    print()
-
-    while True:
-        file_path = input("📂 Enter file path (or 'cancel'): ").strip()
-
-        if file_path.lower() == "cancel":
-            return "", ""
-
-        # Validate file
-        result = _validate_file_path(file_path)
-        if not result:
-            continue
-
-        path, ext, size_mb = result
-
-        # Copy file to upload directory
-        try:
-            dest = Path(upload_dir) / path.name
-            shutil.copy(str(path), str(dest))
-            file_type = "csv" if ext == ".csv" else "pdf"
-            print(f"✅ Uploaded: {path.name} ({size_mb:.1f}MB)")
-            print(f"   Detected type: {file_type.upper()}")
-            return str(dest), file_type
-        except Exception as e:
-            print(f"❌ Error: {e}")
-
-
-def _validate_folder_path() -> str:
-    """Prompt user for folder path with validation. Returns path or empty string if cancelled."""
-    print("\n📁 FOLDER LOADING")
-    print("-" * 90)
-
-    while True:
-        folder_path = input("📂 Enter folder path (or 'cancel'): ").strip()
-
-        if folder_path.lower() == "cancel":
-            return ""
-
-        path = Path(folder_path)
-
-        if not path.exists():
-            print(f"❌ Folder not found: {folder_path}")
-            continue
-
-        if not path.is_dir():
-            print(f"❌ Not a folder: {folder_path}")
-            continue
-
-        return folder_path
-
-
-def _copy_folder_files(upload_dir: str, file_paths: list[str]) -> list[str]:
-    """Copy files from source folder to upload directory."""
-    imported_files = []
-    for file_path in file_paths:
-        try:
-            src = Path(file_path)
-            dst = Path(upload_dir) / src.name
-            shutil.copy(str(src), str(dst))
-            imported_files.append(str(dst))
-        except Exception as e:
-            print(f"   ⚠️  Error copying {src.name}: {e}")
-    return imported_files
-
-
-def _parse_csv_files(file_paths: list[str]) -> list:
-    """Parse CSV files and extract project data."""
-    projects = []
-    for file_path in file_paths:
-        if file_path.lower().endswith('.csv'):
-            try:
-                new_projects = CSVParser().parse(file_path)
-                projects.extend(new_projects)
-            except Exception as e:
-                print(f"   ⚠️  Error parsing {Path(file_path).name}: {e}")
-    return projects
-
-
-def load_folder(upload_dir: str) -> tuple[list[str], list]:
-    """
-    Load folder: discover, copy, and parse CSV projects.
-    Indexing happens later in _index_documents() for all files together.
-
-    Orchestrates: validate → discover → copy → parse.
-    """
-    from src.data.document_loader import DocumentLoader
-
-    # Get and validate folder path
-    folder_path = _validate_folder_path()
-    if not folder_path:
-        return [], []
-
-    try:
-        # Discover files in folder (uses static method)
-        file_paths, results = DocumentLoader.discover_files(folder_path)
-
-        if not file_paths:
-            print(f"❌ No CSV or PDF files found in {folder_path}")
-            return [], []
-
-        # Copy files to upload directory
-        imported_files = _copy_folder_files(upload_dir, file_paths)
-
-        # Parse CSV files for project data
-        projects = _parse_csv_files(imported_files)
-
-        print(f"\n✅ Loaded folder: {folder_path}")
-        print(f"   • CSV files: {results['csv']}")
-        print(f"   • PDF files: {results['pdf']}")
-        print(f"   • Total files: {results['csv'] + results['pdf']}")
-        print(f"   ℹ️  Files will be indexed in analysis phase")
-
-        return imported_files, projects
-
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        return [], []
-
-
-def load_documents():
-    """
-    Document loading menu: upload files, load folder, or start analysis.
-    Returns: (upload_dir, uploaded_files, projects)
-    """
-    upload_dir = tempfile.mkdtemp(prefix="construction_agent_")
-    uploaded_files = []
-    projects = []
-
-    print_header("📄 DOCUMENT LOADING")
-
-    while True:
-        print("\nOptions:")
-        print("  1. Upload a file (auto-detect CSV/PDF)")
-        print("  2. Load folder")
-        print("  3. Start analysis")
-
-        choice = input("\n👉 Choose (1-3): ").strip()
-
-        if choice == "1":
-            file_path, file_type = upload_file(upload_dir)
-            if file_path:
-                uploaded_files.append(file_path)
-
-                # Auto-process based on detected type
-                if file_type == "csv":
-                    try:
-                        new_projects = CSVParser().parse(file_path)
-                        projects.extend(new_projects)
-                        print(f"   ✅ CSV parsed: {len(new_projects)} projects")
-                    except Exception as e:
-                        print(f"   ⚠️  Error parsing CSV: {e}")
-                elif file_type == "pdf":
-                    print(f"   ✅ PDF will be indexed during analysis")
-
-        elif choice == "2":
-            folder_files, folder_projects = load_folder(upload_dir)
-            if folder_files:
-                uploaded_files.extend(folder_files)
-                projects.extend(folder_projects)
-                print(f"   ✅ Folder loaded: {len(folder_files)} files")
-
-        elif choice == "3":
-            break
-        else:
-            print("❌ Invalid option")
-
-    if uploaded_files:
-        print(f"\n✅ Documents ready for indexing: {len(uploaded_files)}")
-    else:
-        print("\n⚠️  No documents loaded. Using empty dataset.")
-
-    return upload_dir, uploaded_files, projects
 
 
 def _index_documents(
@@ -485,9 +278,11 @@ def main():
     log.info(f"Config: LOG_LEVEL={os.getenv('LOG_LEVEL', 'INFO')}, LOG_FILE={os.getenv('LOG_FILE')}")
     log.info("=" * 80)
 
-    # Load documents
+    # Load documents using specialized FileLoader
     log.info("📄 Starting document loading process...")
-    upload_dir, uploaded_files, projects = load_documents()
+    file_loader = FileLoader()
+    uploaded_files, projects = file_loader.load_documents()
+    upload_dir = file_loader.upload_dir
     log.debug(f"Document loading complete: {len(uploaded_files)} files, {len(projects)} projects")
 
     # Create temporary database
