@@ -15,7 +15,7 @@ load_dotenv(".env")
 
 from src.logging_config import initialize_logging, get_logger
 from src.ui import FileLoader
-from src.indexing import DocumentIndexer
+from src.data.indexers import IndexOrchestrator
 from src.agent.executors import AgentFactory
 from src.cli import InteractiveShell
 
@@ -96,9 +96,9 @@ def main():
     logger.debug(f"Created temporary database: {db_path}")
 
     try:
-        # Index documents using specialized indexer
-        indexer = DocumentIndexer(logger)
-        vector_store, embedding_client, _ = indexer.index_files(uploaded_files, db_path)
+        # Index documents using orchestrator
+        orchestrator = IndexOrchestrator(logger)
+        vector_store, embedding_client, _ = orchestrator.index_files(uploaded_files, db_path)
 
         # Initialize agent
         agent = _initialize_agent(projects, vector_store, embedding_client, logger)
