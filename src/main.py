@@ -13,12 +13,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 load_dotenv(".env")
 
-# Setup logging
-from src.logging_config import setup_logging, get_logger
-log_level = os.getenv("LOG_LEVEL", "INFO").upper()
-debug_mode = log_level == "DEBUG"
-logger = setup_logging(debug=debug_mode, log_file=os.getenv("LOG_FILE"))
-log = get_logger("construction_agent")
+# Logging (initialized in main())
+from src.logging_config import initialize_logging, get_logger
+log = None  # Will be initialized in main()
 
 try:
     from src.data.parsers import CSVParser
@@ -137,11 +134,17 @@ def load_documents():
 
 
 def main():
+    global log
+
+    # Initialize logging at runtime (not at import time)
+    initialize_logging()
+    log = get_logger("construction_agent")
+
     print_header("🤖 CONSTRUCTION ESTIMATING AGENT")
 
     log.info("=" * 80)
-    log.info(f"Starting Construction Agent | Log Level: {log_level}")
-    log.info(f"Config: LOG_LEVEL={log_level}, LOG_FILE={os.getenv('LOG_FILE')}")
+    log.info(f"Starting Construction Agent | Log Level: {os.getenv('LOG_LEVEL', 'INFO')}")
+    log.info(f"Config: LOG_LEVEL={os.getenv('LOG_LEVEL', 'INFO')}, LOG_FILE={os.getenv('LOG_FILE')}")
     log.info("=" * 80)
 
     # Load documents (upload or from data/)
@@ -205,7 +208,8 @@ def main():
                     log.info(f"   ✅ PDF indexed: {filename} ({count} chunks)")
 
             except Exception as e:
-                log.error(f"❌ Error indexing {filename}: {e}", exc_info=debug_mode)
+                is_debug = os.getenv("LOG_LEVEL", "INFO").upper() == "DEBUG"
+                log.error(f"❌ Error indexing {filename}: {e}", exc_info=is_debug)
                 print(f"⚠️  Error indexing {filename}: {e}")
 
         log.info(f"✅ Indexing complete: CSV={results['csv']}, PDF={results['pdf']}")
@@ -341,7 +345,8 @@ def main():
                 print("\n❌ Query interrupted\n")
             except Exception as e:
                 error_str = str(e)
-                log.error(f"❌ Query execution failed: {error_str}", exc_info=debug_mode)
+                is_debug = os.getenv("LOG_LEVEL", "INFO").upper() == "DEBUG"
+                log.error(f"❌ Query execution failed: {error_str}", exc_info=is_debug)
                 if "credit" in error_str.lower() or "quota" in error_str.lower():
                     print(f"\n⚠️  API Credits/Quota Exceeded\n")
                     print("Using mock embeddings - search may be less accurate.")

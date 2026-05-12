@@ -117,3 +117,20 @@ class ColoredFormatter(logging.Formatter):
 def get_logger(name: str) -> logging.Logger:
     """Get a logger instance for a module"""
     return logging.getLogger(f"construction_agent.{name}")
+
+
+def initialize_logging(log_level: str = None, log_file: str = None) -> None:
+    """Initialize logging from environment or explicit parameters.
+
+    Args:
+        log_level: Log level (DEBUG/INFO/WARNING). Defaults to env LOG_LEVEL.
+        log_file: Log file path. Defaults to env LOG_FILE.
+    """
+    # Get from parameters or environment
+    level = log_level or os.getenv("LOG_LEVEL", "INFO")
+    level = level.upper()
+    debug_mode = level == "DEBUG"
+    file_path = log_file or os.getenv("LOG_FILE")
+
+    # Initialize logger
+    setup_logging(debug=debug_mode, log_file=file_path)

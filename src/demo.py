@@ -11,6 +11,9 @@ from dotenv import load_dotenv
 
 load_dotenv(".env")
 
+# Initialize logging at runtime (in main())
+from src.logging_config import initialize_logging, get_logger
+
 try:
     from src.data.parsers import CSVParser
     from src.data.document_loader import DocumentLoader
@@ -26,6 +29,10 @@ except ImportError:
 
 
 def main():
+    # Initialize logging at runtime (not at import time)
+    initialize_logging()
+    log = get_logger("construction_agent.demo")
+
     print("\n" + "=" * 90)
     print("🤖 CONSTRUCTION AGENT - DEMO")
     print("=" * 90)
