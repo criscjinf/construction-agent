@@ -23,7 +23,7 @@ try:
     from src.data.indexers import IndexersFactory
     from src.vectorstore.storage import SQLiteVectorStore
     from src.vectorstore.embeddings import OpenAIEmbeddingClient
-    from src.agent.core import AgentExecutor
+    from src.agent.executors import AgentFactory
 except ImportError:
     print("❌ Error: Cannot import modules. Make sure you're in the project root.")
     import sys
@@ -227,9 +227,15 @@ def main():
             projects = [Project(proj_id="DOCS", proj_name="Uploaded Documents", items=[])]
             log.debug("Created dummy project for documents without CSV data")
 
-        log.debug(f"AgentExecutor initializing with {len(projects)} projects and vector_store")
-        agent = AgentExecutor(projects=projects, vector_store=vector_store, embedding_client=embedding_client)
-        log.info(f"✅ Agent ready with {len(agent.tools)} tools")
+        log.debug(f"Creating agent with {len(projects)} projects and vector_store")
+        agent = AgentFactory.create_agent(
+            projects=projects,
+            vector_store=vector_store,
+            embedding_client=embedding_client,
+            allow_fallback=True
+        )
+        executor_type = type(agent).__name__
+        log.info(f"✅ Agent ready: {executor_type} with {len(agent.tools)} tools")
 
         print(f"✅ Agent ready with {len(agent.tools)} tools")
         print("   • Search (CSV + PDF)")

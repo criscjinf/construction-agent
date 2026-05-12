@@ -20,7 +20,7 @@ try:
     from src.data.indexers import IndexersFactory
     from src.vectorstore.storage import SQLiteVectorStore
     from src.vectorstore.embeddings import MockEmbeddingClient
-    from src.agent.core import AgentExecutor
+    from src.agent.executors import AgentFactory
     from src.data.models import Project
 except ImportError:
     print("❌ Cannot import modules")
@@ -108,8 +108,14 @@ def main():
         projects = [Project(proj_id="DOCS", proj_name="Documents", items=[])]
 
     try:
-        agent = AgentExecutor(projects=projects, vector_store=vector_store, embedding_client=embedding_client)
-        print(f"✅ Agent ready with {len(agent.tools)} tools")
+        agent = AgentFactory.create_agent(
+            projects=projects,
+            vector_store=vector_store,
+            embedding_client=embedding_client,
+            allow_fallback=True
+        )
+        executor_type = type(agent).__name__
+        print(f"✅ Agent ready ({executor_type}) with {len(agent.tools)} tools")
 
     except Exception as e:
         print(f"❌ Error: {e}")

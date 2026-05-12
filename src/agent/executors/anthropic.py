@@ -1,12 +1,4 @@
-"""
-Agent orchestrator using Claude API with tool-use patterns.
-
-AgentExecutor:
-- Initializes Claude SDK
-- Processes tool calls from agent
-- Executes Python functions
-- Formats responses with sources
-"""
+"""Anthropic Claude agent executor."""
 
 import logging
 import os
@@ -17,16 +9,22 @@ from src.data.models import Project
 from src.vectorstore.embeddings import EmbeddingClient
 from src.vectorstore.retrieval import HybridRetriever
 from src.vectorstore.storage import VectorStore
+from src.agent.executors.base import BaseAgentExecutor
+from src.agent.prompts import get_system_prompt
+from src.agent.tools import (
+    DetectOutliersInput,
+    AggregateItemsInput,
+    CompareBiddersInput,
+    SearchInput,
+)
 from src.analysis.outliers import detect_price_outliers
 from src.analysis.aggregations import AggregationService
 from src.analysis.comparisons import ComparisonService
-from src.agent.tools import get_tool_definitions, DetectOutliersInput, AggregateItemsInput, CompareBiddersInput, SearchInput
-from src.agent.prompts import get_system_prompt
 
 logger = logging.getLogger(__name__)
 
 
-class AgentExecutor:
+class AnthropicAgentExecutor(BaseAgentExecutor):
     """Execute Claude agent with tool-use for construction bid analysis."""
 
     def __init__(
@@ -37,54 +35,45 @@ class AgentExecutor:
         model: str = "claude-sonnet-4-6"
     ):
         """
-        Initialize agent executor.
+        Initialize Anthropic agent executor.
 
         Args:
             projects: List of loaded Project objects
             vector_store: Vector store for semantic search (optional)
-            embedding_client: Embedding client for generating vectors (required if vector_store is provided)
+            embedding_client: Embedding client for generating vectors
             model: Claude model to use
+
+        Raises:
+            ValueError: If ANTHROPIC_API_KEY not configured
         """
         # Get API key from environment
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
-            error_msg = (
+            raise ValueError(
                 "❌ ANTHROPIC_API_KEY not configured\n\n"
-                "To use the Claude Agent mode, you need:\n"
-                "  1. Configure ANTHROPIC_API_KEY in .env file\n"
-                "  2. Ensure you have active credits on https://console.anthropic.com\n\n"
-                "💡 Alternative: Use the fast mode without API:\n"
-                "   $ python3 test_interactive.py"
+                "To use the Claude Agent, configure:\n"
+                "  1. ANTHROPIC_API_KEY in .env file\n"
+                "  2. Ensure you have active credits\n\n"
+                "💡 Fallback: Use MockAgentExecutor for testing"
             )
-            raise ValueError(error_msg)
+
+        super().__init__(projects, vector_store, embedding_client)
 
         self.client = Anthropic(api_key=api_key)
-        self.projects = projects
-        self.vector_store = vector_store
-        self.embedding_client = embedding_client
         self.model = model
-        self.tools = get_tool_definitions()
-
-        # Index projects in vector store for semantic search
-        if self.vector_store:
-            if not self.embedding_client:
-                raise ValueError("embedding_client is required when vector_store is provided")
-            self._index_projects_in_vector_store()
 
     def query(self, user_message: str, max_iterations: int = 5) -> str:
         """
-        Execute agent loop: process query, call tools, format response.
+        Execute agent loop with Claude API.
 
         Args:
             user_message: User's natural language query
-            max_iterations: Max tool-call iterations (prevent infinite loops)
+            max_iterations: Max tool-call iterations
 
         Returns:
             Final response with sources cited
         """
-        messages = [
-            {"role": "user", "content": user_message}
-        ]
+        messages = [{"role": "user", "content": user_message}]
 
         for iteration in range(max_iterations):
             logger.info(f"Agent iteration {iteration + 1}/{max_iterations}")
@@ -109,7 +98,6 @@ class AgentExecutor:
 
             # Check if agent is done
             if response.stop_reason == "end_turn":
-                # Extract final text response
                 for block in response.content:
                     if hasattr(block, 'text'):
                         return block.text
@@ -117,7 +105,6 @@ class AgentExecutor:
 
             # Process tool calls
             if response.stop_reason != "tool_use":
-                # Shouldn't happen, but handle gracefully
                 for block in response.content:
                     if hasattr(block, 'text'):
                         return block.text
@@ -162,16 +149,7 @@ class AgentExecutor:
         return "Max iterations reached"
 
     def _execute_tool(self, tool_name: str, tool_input: dict) -> str:
-        """
-        Execute a single tool and return result as string.
-
-        Args:
-            tool_name: Name of tool to execute
-            tool_input: Input parameters (dict)
-
-        Returns:
-            String representation of result
-        """
+        """Execute a single tool and return result as string."""
         if tool_name == "detect_outliers":
             return self._tool_detect_outliers(tool_input)
         elif tool_name == "aggregate_items":
@@ -241,7 +219,6 @@ Top {inp.limit} {order_label} items by {inp.metric}:
         """Execute bidder comparison tool."""
         inp = CompareBiddersInput(**params)
 
-        # Find the project containing this item
         for project in self.projects:
             item = project.get_item_by_number(inp.item_no)
             if item:
@@ -306,37 +283,3 @@ Top {inp.limit} {order_label} items by {inp.metric}:
             )
 
         return "\n".join(result_strs)
-
-    def _index_projects_in_vector_store(self) -> None:
-        """Index bid items from projects into vector store for semantic search."""
-        try:
-            count = 0
-            for project in self.projects:
-                # Index each bid item
-                for item in project.items:
-                    doc_id = f"{project.proj_id}_{item.item_no}"
-                    text = f"{item.item_desc} - {item.unit} @ ${item.unit_price:.2f}"
-
-                    try:
-                        embedding = self.embedding_client.embed_text(text)
-                        self.vector_store.insert(
-                            doc_id=doc_id,
-                            text=text,
-                            embedding=embedding,
-                            metadata={
-                                "proj_id": project.proj_id,
-                                "item_no": item.item_desc,
-                                "unit_price": item.unit_price,
-                                "source": "bid_items",
-                            }
-                        )
-                        count += 1
-                    except Exception as e:
-                        logger.debug(f"Failed to embed item {doc_id}: {e}")
-                        continue
-
-            logger.info(f"Indexed {count} bid items in vector store")
-
-        except Exception as e:
-            logger.error(f"Failed to index projects in vector store: {e}")
-
