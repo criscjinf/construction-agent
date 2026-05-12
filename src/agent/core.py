@@ -17,7 +17,7 @@ from src.data.models import Project
 from src.vectorstore.embeddings import EmbeddingClient
 from src.vectorstore.retrieval import HybridRetriever
 from src.vectorstore.storage import VectorStore
-from src.analysis.outliers import OutlierDetector, OutlierMethod, detect_price_outliers
+from src.analysis.outliers import detect_price_outliers
 from src.analysis.aggregations import AggregationService
 from src.analysis.comparisons import ComparisonService
 from src.agent.tools import get_tool_definitions, DetectOutliersInput, AggregateItemsInput, CompareBiddersInput, SearchInput
