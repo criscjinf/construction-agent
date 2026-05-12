@@ -37,11 +37,35 @@ def print_header(title):
     print("=" * 90)
 
 
+def _validate_file_path(file_path: str) -> tuple[Path, str, float] | None:
+    """
+    Validate file path, extension, and size.
+    Returns: (Path, extension, size_mb) or None if invalid
+    """
+    path = Path(file_path)
+
+    if not path.exists():
+        print(f"❌ File not found: {file_path}")
+        return None
+
+    ext = path.suffix.lower()
+    if ext not in [".csv", ".pdf"]:
+        print(f"❌ Invalid format: '.{ext[1:] if ext else 'no extension'}'")
+        print(f"   Supported: .csv, .pdf")
+        return None
+
+    size_mb = path.stat().st_size / (1024 * 1024)
+    if size_mb > 100:
+        print(f"❌ File too large: {size_mb:.1f}MB (max 100MB)")
+        return None
+
+    return path, ext, size_mb
+
+
 def upload_file(upload_dir: str) -> tuple[str, str]:
     """
-    Prompt user to upload a file and detect type automatically.
-    Returns: (file_path, file_type) where file_type is 'csv' or 'pdf'
-    Returns: ('', '') if cancelled or invalid
+    Prompt user to upload a file.
+    Returns: (file_path, file_type) or ('', '') if cancelled
     """
     print("\n📁 FILE UPLOAD")
     print("-" * 90)
@@ -54,27 +78,14 @@ def upload_file(upload_dir: str) -> tuple[str, str]:
         if file_path.lower() == "cancel":
             return "", ""
 
-        path = Path(file_path)
-
-        # Check file exists
-        if not path.exists():
-            print(f"❌ File not found: {file_path}")
+        # Validate file
+        result = _validate_file_path(file_path)
+        if not result:
             continue
 
-        # Check extension
-        ext = path.suffix.lower()
-        if ext not in [".csv", ".pdf"]:
-            print(f"❌ Invalid format: '.{ext[1:] if ext else 'no extension'}'")
-            print(f"   Supported: .csv, .pdf")
-            continue
+        path, ext, size_mb = result
 
-        # Check file size
-        size_mb = path.stat().st_size / (1024 * 1024)
-        if size_mb > 100:
-            print(f"❌ File too large: {size_mb:.1f}MB (max 100MB)")
-            continue
-
-        # Copy file
+        # Copy file to upload directory
         try:
             dest = Path(upload_dir) / path.name
             shutil.copy(str(path), str(dest))
@@ -86,16 +97,8 @@ def upload_file(upload_dir: str) -> tuple[str, str]:
             print(f"❌ Error: {e}")
 
 
-def load_folder(upload_dir: str) -> tuple[list[str], list]:
-    """
-    Prompt user to select a folder and load all CSV/PDF files.
-    Returns: (file_paths, projects)
-    """
-    from src.data.document_loader import DocumentLoader
-    from src.data.indexers import IndexersFactory
-    from src.vectorstore.embeddings import MockEmbeddingClient
-    from src.vectorstore.storage import SQLiteVectorStore
-
+def _validate_folder_path() -> str:
+    """Prompt user for folder path with validation. Returns path or empty string if cancelled."""
     print("\n📁 FOLDER LOADING")
     print("-" * 90)
 
@@ -103,11 +106,10 @@ def load_folder(upload_dir: str) -> tuple[list[str], list]:
         folder_path = input("📂 Enter folder path (or 'cancel'): ").strip()
 
         if folder_path.lower() == "cancel":
-            return [], []
+            return ""
 
         path = Path(folder_path)
 
-        # Check folder exists
         if not path.exists():
             print(f"❌ Folder not found: {folder_path}")
             continue
@@ -116,55 +118,82 @@ def load_folder(upload_dir: str) -> tuple[list[str], list]:
             print(f"❌ Not a folder: {folder_path}")
             continue
 
-        # Create temporary vector store for CSV parsing
-        with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-            temp_db = f.name
+        return folder_path
 
+
+def _copy_folder_files(upload_dir: str, file_paths: list[str]) -> list[str]:
+    """Copy files from source folder to upload directory."""
+    imported_files = []
+    for file_path in file_paths:
         try:
-            # Load all files from folder
-            vector_store = SQLiteVectorStore(db_path=temp_db)
-            embedding_client = MockEmbeddingClient()
-            indexers_factory = IndexersFactory(vector_store=vector_store, embedding_client=embedding_client)
-            loader = DocumentLoader(indexers_factory=indexers_factory)
-
-            file_paths, results = loader.load_folder(folder_path)
-
-            # Copy files to upload directory
-            imported_files = []
-            for file_path in file_paths:
-                try:
-                    src = Path(file_path)
-                    dst = Path(upload_dir) / src.name
-                    shutil.copy(str(src), str(dst))
-                    imported_files.append(str(dst))
-                except Exception as e:
-                    print(f"   ⚠️  Error copying {src.name}: {e}")
-
-            # Parse CSV files for project data
-            projects = []
-            for file_path in imported_files:
-                if file_path.lower().endswith('.csv'):
-                    try:
-                        new_projects = CSVParser().parse(file_path)
-                        projects.extend(new_projects)
-                    except Exception as e:
-                        print(f"   ⚠️  Error parsing {Path(file_path).name}: {e}")
-
-            # Clean up temporary DB
-            if os.path.exists(temp_db):
-                os.remove(temp_db)
-
-            print(f"\n✅ Loaded folder: {folder_path}")
-            print(f"   • CSV files: {results['csv']}")
-            print(f"   • PDF files: {results['pdf']}")
-            print(f"   • Total files: {results['csv'] + results['pdf']}")
-
-            return imported_files, projects
-
+            src = Path(file_path)
+            dst = Path(upload_dir) / src.name
+            shutil.copy(str(src), str(dst))
+            imported_files.append(str(dst))
         except Exception as e:
-            print(f"❌ Error: {e}")
-            if os.path.exists(temp_db):
-                os.remove(temp_db)
+            print(f"   ⚠️  Error copying {src.name}: {e}")
+    return imported_files
+
+
+def _parse_csv_files(file_paths: list[str]) -> list:
+    """Parse CSV files and extract project data."""
+    projects = []
+    for file_path in file_paths:
+        if file_path.lower().endswith('.csv'):
+            try:
+                new_projects = CSVParser().parse(file_path)
+                projects.extend(new_projects)
+            except Exception as e:
+                print(f"   ⚠️  Error parsing {Path(file_path).name}: {e}")
+    return projects
+
+
+def load_folder(upload_dir: str) -> tuple[list[str], list]:
+    """
+    Load folder of documents. Returns (file_paths, projects).
+    Orchestrates validation, file discovery, copying, and parsing.
+    """
+    from src.data.document_loader import DocumentLoader
+    from src.data.indexers import IndexersFactory
+    from src.vectorstore.embeddings import MockEmbeddingClient
+    from src.vectorstore.storage import SQLiteVectorStore
+
+    # Get and validate folder path
+    folder_path = _validate_folder_path()
+    if not folder_path:
+        return [], []
+
+    # Create temporary store to discover files
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+        temp_db = f.name
+
+    try:
+        # Discover files in folder
+        vector_store = SQLiteVectorStore(db_path=temp_db)
+        embedding_client = MockEmbeddingClient()
+        indexers_factory = IndexersFactory(vector_store=vector_store, embedding_client=embedding_client)
+        loader = DocumentLoader(indexers_factory=indexers_factory)
+        file_paths, results = loader.load_folder(folder_path)
+
+        # Copy files and parse projects
+        imported_files = _copy_folder_files(upload_dir, file_paths)
+        projects = _parse_csv_files(imported_files)
+
+        print(f"\n✅ Loaded folder: {folder_path}")
+        print(f"   • CSV files: {results['csv']}")
+        print(f"   • PDF files: {results['pdf']}")
+        print(f"   • Total files: {results['csv'] + results['pdf']}")
+
+        return imported_files, projects
+
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return [], []
+
+    finally:
+        # Clean up temporary DB
+        if os.path.exists(temp_db):
+            os.remove(temp_db)
 
 
 def load_documents():
