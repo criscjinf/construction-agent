@@ -45,7 +45,7 @@ class DocumentLoader:
     def discover_files(folder_path: str) -> tuple[list[str], dict]:
         """
         Discover all CSV and PDF files in a folder without requiring indexers.
-        Static method for lightweight file discovery.
+        Static method for lightweight file discovery (no indexing).
 
         Args:
             folder_path: Path to folder containing documents
@@ -77,3 +77,36 @@ class DocumentLoader:
                     results["errors"].append(str(file_path))
 
         return file_paths, results
+
+    def load_folder(self, folder_path: str) -> dict:
+        """
+        Load and index all CSV and PDF files from a folder.
+        Discovers files and indexes each one.
+
+        Args:
+            folder_path: Path to folder containing documents
+
+        Returns:
+            Results dict with indexed counts and errors
+        """
+        # Discover files in folder (uses static method)
+        file_paths, results = self.discover_files(folder_path)
+
+        if not file_paths:
+            logger.warning(f"No CSV or PDF files found in {folder_path}")
+            return results
+
+        # Index each discovered file
+        indexed_count = 0
+        for file_path in file_paths:
+            try:
+                count = self.load_and_index(file_path)
+                if count > 0:
+                    indexed_count += count
+                    logger.debug(f"Indexed {count} items from {Path(file_path).name}")
+            except Exception as e:
+                logger.error(f"Error indexing {file_path}: {e}")
+                results["errors"].append(str(file_path))
+
+        results["indexed"] = indexed_count
+        return results
