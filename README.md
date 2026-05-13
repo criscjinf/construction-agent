@@ -20,31 +20,21 @@ source venv/bin/activate
 # 2. Install project + dependencies
 pip install -e .
 
-# 3. Configure (copy template)
+# 3. Configure (optional)
 cp .env.example .env
-# Edit .env with your API keys:
+# Edit .env with your API keys (optional):
 #   OPENAI_API_KEY=sk-proj-...
 #   ANTHROPIC_API_KEY=sk-ant-...
 
 # 4. Run
-agent                 # Interactive mode (upload files)
-agent-demo           # Auto-demo with data/ folder
+agent                 # Interactive mode (upload files, then ask questions)
+agent-demo           # Auto-demo (pre-loads data/ folder)
 ```
 
-**Or without installation** (requires poetry/pip in path):
-```bash
-python3 src/main.py    # Interactive agent
-python3 src/demo.py    # Demo mode
-```
-
-### Example Queries (after starting)
-
-```
-"What are the top 5 most expensive bid items?"
-"Are there any pricing anomalies?"
-"How do bidders compare on MOBILIZATION?"
-"Which items have the most competition?"
-```
+Try asking:
+- *"What are the top 5 most expensive bid items?"*
+- *"Are there any pricing anomalies?"*
+- *"How do bidders compare on MOBILIZATION?"*
 
 ---
 
