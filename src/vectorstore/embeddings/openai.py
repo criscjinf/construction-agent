@@ -6,6 +6,7 @@ from typing import Optional
 
 from openai import OpenAI
 
+from src.config import Config
 from src.vectorstore.embeddings.base import EmbeddingClient
 
 logger = logging.getLogger(__name__)
@@ -16,7 +17,7 @@ class OpenAIEmbeddingClient(EmbeddingClient):
 
     def __init__(
         self,
-        model: str = "text-embedding-3-small",
+        model: Optional[str] = None,
         api_key: Optional[str] = None,
         verbose: bool = False,
     ):
@@ -24,11 +25,11 @@ class OpenAIEmbeddingClient(EmbeddingClient):
         Initialize OpenAI embedding client.
 
         Args:
-            model: OpenAI embedding model (default: text-embedding-3-small)
+            model: OpenAI embedding model (defaults to Config.EMBEDDING_MODEL)
             api_key: OpenAI API key (from env if not provided)
             verbose: Enable debug logging
         """
-        self.model = model
+        self.model = model or Config.get_embedding_model()
         self.verbose = verbose
 
         # Get API key from argument or environment
@@ -39,10 +40,10 @@ class OpenAIEmbeddingClient(EmbeddingClient):
         self.client = OpenAI(api_key=key)
 
         # Dimension for text-embedding-3-small is 1536
-        self.embedding_dim = 1536 if "small" in model else 3072
+        self.embedding_dim = 1536 if "small" in self.model else 3072
 
         if self.verbose:
-            logger.info(f"OpenAIEmbeddingClient initialized: model={model}, dim={self.embedding_dim}")
+            logger.info(f"OpenAIEmbeddingClient initialized: model={self.model}, dim={self.embedding_dim}")
 
     def embed_text(self, text: str) -> list[float]:
         """
