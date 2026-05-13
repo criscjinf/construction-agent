@@ -194,26 +194,48 @@ Analyzed {result['count']} prices for {inp.item_type or 'items'}:
         """Execute aggregation tool."""
         inp = AggregateItemsInput(**params)
 
-        top_items = AggregationService.get_top_items(
-            projects=self.projects,
-            metric=inp.metric,
-            limit=inp.limit,
-            order=inp.order
-        )
+        # Check if metric is a known field or unmapped field
+        known_metrics = {"unit_price", "qty", "ext_amt"}
 
-        if not top_items:
-            return f"No items found with metric '{inp.metric}'"
+        if inp.metric in known_metrics:
+            # Use standard aggregation for known metrics
+            top_items = AggregationService.get_top_items(
+                projects=self.projects,
+                metric=inp.metric,
+                limit=inp.limit,
+                order=inp.order
+            )
 
-        order_label = "highest" if inp.order == "desc" else "lowest"
-        result_strs = []
-        for i, (item_no, item_desc, value) in enumerate(top_items, 1):
-            result_strs.append(f"{i}. {item_desc} (#{item_no}): {value:.2f}")
+            if not top_items:
+                return f"No items found with metric '{inp.metric}'"
 
-        interpretation = f"""
+            order_label = "highest" if inp.order == "desc" else "lowest"
+            result_strs = []
+            for i, (item_no, item_desc, value) in enumerate(top_items, 1):
+                result_strs.append(f"{i}. {item_desc} (#{item_no}): {value:.2f}")
+
+            interpretation = f"""
 Top {inp.limit} {order_label} items by {inp.metric}:
 """ + "\n".join(result_strs)
 
-        return interpretation.strip()
+            return interpretation.strip()
+        else:
+            # Use unmapped field aggregation
+            result = AggregationService.aggregate_unmapped_field(
+                projects=self.projects,
+                field_name=inp.metric,
+                operation=inp.operation
+            )
+
+            if result is None:
+                return f"No valid values found for unmapped field '{inp.metric}'"
+
+            return f"""
+Aggregation result for '{inp.metric}' ({inp.operation}): {result:.2f}
+
+Note: This field was detected as an unknown/unmapped column in your CSV.
+The system automatically inferred its type and aggregated the values.
+"""
 
     def _tool_compare_bidders(self, params: dict) -> str:
         """Execute bidder comparison tool."""

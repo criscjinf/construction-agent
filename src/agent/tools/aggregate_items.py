@@ -8,8 +8,13 @@ class AggregateItemsInput(BaseModel):
 
     metric: str = Field(
         default="unit_price",
-        description="Metric to aggregate: unit_price, qty, ext_amt",
-        examples=["unit_price", "qty", "ext_amt"]
+        description="Metric to aggregate: unit_price, qty, ext_amt, or any unmapped field name",
+        examples=["unit_price", "qty", "ext_amt", "CUSTOM_COST"]
+    )
+    operation: str = Field(
+        default="sum",
+        description="Operation for unmapped fields: sum, min, max, avg, median",
+        examples=["sum", "avg"]
     )
     limit: int = Field(
         default=5,
