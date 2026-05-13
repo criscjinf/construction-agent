@@ -5,6 +5,7 @@ Demo - Shows complete workflow with data in data/ folder
 
 import os
 import shutil
+import tempfile
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -15,7 +16,7 @@ from src.config import Config
 from src.logging_config import initialize_logging, get_logger
 
 try:
-    from src.data.parsers import CSVParser
+    from src.data.parsers import CSVParser, CSVValidationError
     from src.data.document_loader import DocumentLoader
     from src.data.indexers import IndexersFactory
     from src.vectorstore.storage import SQLiteVectorStore
@@ -55,6 +56,8 @@ def main():
                 new_projects = CSVParser().parse(str(csv_file))
                 projects.extend(new_projects)
                 print(f"   ✅ CSV: {csv_file.name}")
+            except CSVValidationError as e:
+                print(f"   ❌ {csv_file.name}: Invalid format - {e}")
             except Exception as e:
                 print(f"   ❌ {csv_file.name}: {e}")
 

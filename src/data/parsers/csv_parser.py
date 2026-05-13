@@ -11,6 +11,11 @@ from src.data.converters import ValueConverter
 logger = logging.getLogger(__name__)
 
 
+class CSVValidationError(Exception):
+    """Raised when CSV is missing required columns."""
+    pass
+
+
 class SchemaMapping:
     """Inferred column mappings with aliases and types."""
 
@@ -68,7 +73,14 @@ class CSVParser:
         self.schema = self._infer_schema(df)
 
         if not self.schema.is_complete():
-            logger.warning(f"Could not map all required columns. Found: {self.schema.warnings}")
+            missing = self._get_missing_fields()
+            error_msg = (
+                f"CSV is missing required columns: {', '.join(missing)}. "
+                f"Please ensure your CSV has the following columns: "
+                f"PROJECT_ID, ITEM_NO, ITEM_DESC, UNIT, QUANTITY, BIDDER, UNIT_PRICE"
+            )
+            logger.error(error_msg)
+            raise CSVValidationError(error_msg)
 
         # Parse rows
         projects = self._parse_rows(df)
@@ -77,6 +89,22 @@ class CSVParser:
             logger.info(f"Parsed {len(projects)} projects from {file_path}")
 
         return projects
+
+    def _get_missing_fields(self) -> list[str]:
+        """Return list of missing required fields."""
+        if not self.schema:
+            return ["PROJECT_ID", "ITEM_NO", "ITEM_DESC", "UNIT", "QUANTITY", "BIDDER", "UNIT_PRICE"]
+
+        required = {
+            "PROJECT_ID": self.schema.proj_id_col,
+            "ITEM_NO": self.schema.item_no_col,
+            "ITEM_DESC": self.schema.item_desc_col,
+            "UNIT": self.schema.unit_col,
+            "QUANTITY": self.schema.qty_col,
+            "BIDDER": self.schema.bidder_col,
+            "UNIT_PRICE": self.schema.unit_pr_col,
+        }
+        return [field for field, col in required.items() if col is None]
 
     def _infer_schema(self, df: pd.DataFrame) -> SchemaMapping:
         """Infer column mappings from CSV headers."""
@@ -95,7 +123,7 @@ class CSVParser:
             "unit": ["UNIT", "UNITS", "UOM"],
             "qty": ["QTY", "QUANTITY", "QNTY"],
             "eng_est": ["ENG_EST_UNIT_PR", "ENG EST UNIT PR", "EST_UNIT_PRICE", "EST UNIT PRICE"],
-            "bidder": ["BIDDER", "CONTRACTOR", "COMPANY"],
+            "bidder": ["BIDDER", "CONTRACTOR", "COMPANY", "COMPANY_NAME", "COMPANY NAME", "COMP", "SUPPLIER", "SUPPLIER_NAME", "SUPPLIER NAME", "SUP"],
             "bid_rank": ["BID_RANK", "BID RANK", "RANK", "BID_NO", "BID NO"],
             "unit_pr": ["UNIT_PR", "UNIT PR", "UNIT_PRICE", "UNIT PRICE", "PRICE"],
             "ext_amt": ["EXT_AMT", "EXT AMT", "EXTENDED_AMT", "EXTENDED AMT", "EXT_AMOUNT", "EXT AMOUNT", "EXT"],

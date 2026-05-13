@@ -6,7 +6,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from src.data.parsers import CSVParser
+from src.data.parsers import CSVParser, CSVValidationError
 from src.data.document_loader import DocumentLoader
 
 logger = logging.getLogger(__name__)
@@ -94,6 +94,9 @@ class FileLoader:
                 try:
                     new_projects = CSVParser().parse(file_path)
                     projects.extend(new_projects)
+                except CSVValidationError as e:
+                    print(f"   ❌ Invalid CSV format: {Path(file_path).name}")
+                    print(f"      {str(e)}")
                 except Exception as e:
                     print(f"   ⚠️  Error parsing {Path(file_path).name}: {e}")
         return projects
@@ -199,6 +202,9 @@ class FileLoader:
                             new_projects = CSVParser().parse(file_path)
                             projects.extend(new_projects)
                             print(f"   ✅ CSV parsed: {len(new_projects)} projects")
+                        except CSVValidationError as e:
+                            print(f"   ❌ Invalid CSV format: {Path(file_path).name}")
+                            print(f"      {str(e)}")
                         except Exception as e:
                             print(f"   ⚠️  Error parsing CSV: {e}")
                     elif file_type == "pdf":
