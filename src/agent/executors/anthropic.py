@@ -1,7 +1,6 @@
 """Anthropic Claude agent executor."""
 
 import logging
-import os
 from typing import Optional
 from anthropic import Anthropic
 
@@ -47,8 +46,8 @@ class AnthropicAgentExecutor(BaseAgentExecutor):
         Raises:
             ValueError: If ANTHROPIC_API_KEY not configured
         """
-        # Get API key from environment
-        api_key = os.getenv("ANTHROPIC_API_KEY")
+        # Get API key from config
+        api_key = Config.ANTHROPIC_API_KEY
         if not api_key:
             raise ValueError(
                 "❌ ANTHROPIC_API_KEY not configured\n\n"

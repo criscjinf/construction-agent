@@ -13,6 +13,7 @@ import traceback
 from dotenv import load_dotenv
 load_dotenv(".env")
 
+from src.config import Config
 from src.logging_config import initialize_logging, get_logger
 from src.ui import FileLoader
 from src.data.indexers import IndexOrchestrator
@@ -79,8 +80,8 @@ def main():
     _print_header("🤖 CONSTRUCTION ESTIMATING AGENT")
 
     logger.info("=" * 80)
-    logger.info(f"Starting Construction Agent | Log Level: {os.getenv('LOG_LEVEL', 'INFO')}")
-    logger.info(f"Config: LOG_LEVEL={os.getenv('LOG_LEVEL', 'INFO')}, LOG_FILE={os.getenv('LOG_FILE')}")
+    logger.info(f"Starting Construction Agent | Log Level: {Config.LOG_LEVEL}")
+    logger.info(f"Config: {Config}")
     logger.info("=" * 80)
 
     # Load documents using specialized FileLoader

@@ -4,9 +4,10 @@ Provides colored, formatted logs with different levels based on DEBUG setting
 """
 
 import logging
-import os
 import sys
 from pathlib import Path
+
+from src.config import Config
 
 
 def setup_logging(debug: bool = False, log_file: str = None) -> logging.Logger:
@@ -119,17 +120,17 @@ def get_logger(name: str) -> logging.Logger:
 
 
 def initialize_logging(log_level: str = None, log_file: str = None) -> None:
-    """Initialize logging from environment or explicit parameters.
+    """Initialize logging from config or explicit parameters.
 
     Args:
-        log_level: Log level (DEBUG/INFO/WARNING). Defaults to env LOG_LEVEL.
-        log_file: Log file path. Defaults to env LOG_FILE.
+        log_level: Log level (DEBUG/INFO/WARNING). Defaults to Config.LOG_LEVEL.
+        log_file: Log file path. Defaults to Config.LOG_FILE.
     """
-    # Get from parameters or environment
-    level = log_level or os.getenv("LOG_LEVEL", "INFO")
+    # Get from parameters or config
+    level = log_level or Config.LOG_LEVEL
     level = level.upper()
     debug_mode = level == "DEBUG"
-    file_path = log_file or os.getenv("LOG_FILE")
+    file_path = log_file or Config.LOG_FILE
 
     # Initialize logger
     setup_logging(debug=debug_mode, log_file=file_path)

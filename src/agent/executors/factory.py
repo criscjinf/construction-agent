@@ -1,9 +1,9 @@
 """Factory for creating appropriate agent executor."""
 
 import logging
-import os
 from typing import Optional
 
+from src.config import Config
 from src.data.models import Project
 from src.vectorstore.embeddings import EmbeddingClient
 from src.vectorstore.storage import VectorStore
@@ -45,7 +45,7 @@ class AgentFactory:
 
         # Try to create Anthropic agent
         try:
-            if not os.getenv("ANTHROPIC_API_KEY"):
+            if not Config.ANTHROPIC_API_KEY:
                 if allow_fallback:
                     logger.warning("ANTHROPIC_API_KEY not set. Using MockAgentExecutor as fallback.")
                     return MockAgentExecutor(projects, vector_store, embedding_client)

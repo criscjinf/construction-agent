@@ -1,7 +1,8 @@
 """Interactive shell for CLI user interactions."""
 
-import os
 import logging
+
+from src.config import Config
 
 
 class InteractiveShell:
@@ -99,7 +100,7 @@ class InteractiveShell:
             print("\n❌ Query interrupted\n")
         except Exception as e:
             error_str = str(e)
-            is_debug = os.getenv("LOG_LEVEL", "INFO").upper() == "DEBUG"
+            is_debug = Config.is_debug()
             self.log.error(f"❌ Query execution failed: {error_str}", exc_info=is_debug)
             if "credit" in error_str.lower() or "quota" in error_str.lower():
                 print(f"\n⚠️  API Credits/Quota Exceeded\n")

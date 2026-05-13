@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Test which embeddings are being used"""
 
-import os
 from dotenv import load_dotenv
 
 load_dotenv(".env")
 
-openai_key = os.getenv("OPENAI_API_KEY")
+from src.config import Config
+
+openai_key = Config.OPENAI_API_KEY
 print("=" * 80)
 print("🔍 EMBEDDINGS CHECK")
 print("=" * 80)

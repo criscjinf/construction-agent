@@ -1,7 +1,6 @@
 """OpenAI embedding client implementation."""
 
 import logging
-import os
 from typing import Optional
 
 from openai import OpenAI
@@ -32,8 +31,8 @@ class OpenAIEmbeddingClient(EmbeddingClient):
         self.model = model or Config.get_embedding_model()
         self.verbose = verbose
 
-        # Get API key from argument or environment
-        key = api_key or os.getenv("OPENAI_API_KEY")
+        # Get API key from argument or config
+        key = api_key or Config.OPENAI_API_KEY
         if not key:
             raise ValueError("OPENAI_API_KEY not provided and not in environment")
 
