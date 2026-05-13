@@ -32,7 +32,6 @@ class AnthropicAgentExecutor(BaseAgentExecutor):
         projects: list[Project],
         vector_store: Optional[VectorStore] = None,
         embedding_client: Optional[EmbeddingClient] = None,
-        model: Optional[str] = None
     ):
         """
         Initialize Anthropic agent executor.
@@ -41,10 +40,12 @@ class AnthropicAgentExecutor(BaseAgentExecutor):
             projects: List of loaded Project objects
             vector_store: Vector store for semantic search (optional)
             embedding_client: Embedding client for generating vectors
-            model: Claude model to use (defaults to Config.AGENT_MODEL)
 
         Raises:
             ValueError: If ANTHROPIC_API_KEY not configured
+
+        Note:
+            Model is always read from Config.AGENT_MODEL environment variable.
         """
         # Get API key from config
         api_key = Config.ANTHROPIC_API_KEY
@@ -60,7 +61,7 @@ class AnthropicAgentExecutor(BaseAgentExecutor):
         super().__init__(projects, vector_store, embedding_client)
 
         self.client = Anthropic(api_key=api_key)
-        self.model = model or Config.get_agent_model()
+        self.model = Config.get_agent_model()
 
     def query(self, user_message: str, max_iterations: int = 5) -> str:
         """

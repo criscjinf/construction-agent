@@ -49,7 +49,7 @@ agent
 agent-demo
 ```
 
-Or run directly with Python (no installation needed):
+Or run directly with Python:
 
 ```bash
 python3 src/main.py    # Interactive agent
@@ -91,28 +91,33 @@ Once running, try these queries:
 ### Five Phases (130 tests, 100% pass rate)
 
 **Phase 1: Data Ingestion** (47 tests)
+
 - Adaptive CSV parsing with schema inference
 - Handles: missing columns, renamed columns, empty cells, multiple projects
 - Pydantic-validated models with DataLoader factory
 
 **Phase 2: Vector Store** (34 tests)
+
 - OpenAI embeddings (text-embedding-3-small)
 - SQLite storage with Repository pattern (swappable to Pinecone)
 - Hybrid retrieval: semantic (70%) + keyword (30%)
 
 **Phase 3: Analysis Tools** (18 tests)
+
 - Outlier detection: Z-score + IQR methods
 - Aggregations: top items, statistics, summaries
 - Comparisons: bidder analysis, competitive ranking
 
 **Phase 4: Agent Framework** (31 tests)
+
 - Claude API integration with tool-use patterns
 - Pydantic tool definitions with JSON schemas
 - Composable tool execution and grounded responses
 
-**Phase 5: Polish** 
+**Phase 5: Polish**
+
 - CLI interface (interactive + single-query modes)
-- >80% test coverage verification
+- > 80% test coverage verification
 - OWASP security audit
 - Comprehensive documentation
 
@@ -130,7 +135,7 @@ Once running, try these queries:
 ✅ High cohesion, low coupling  
 ✅ >90% test coverage  
 ✅ OWASP security compliance  
-✅ No over-engineering  
+✅ No over-engineering
 
 ---
 
@@ -151,11 +156,13 @@ pytest tests/ --cov=src --cov-report=html
 ## Known Limitations & Future Work
 
 ### Current Limitations
+
 1. **No OCR**: Scanned PDFs without native text not supported (future: pytesseract integration)
 2. **Single-session storage**: Vector store not persistent across runs (future: persistent DB)
 3. **Single-threaded**: Agent processes one query at a time (future: async support)
 
 ### Future Enhancements
+
 - Web interface (FastAPI + React)
 - REST API for integration
 - Streaming responses
@@ -199,7 +206,7 @@ docs/
 ✅ No sensitive data in logs  
 ✅ Pinned dependencies  
 ✅ Comprehensive error handling  
-✅ No injection vulnerabilities  
+✅ No injection vulnerabilities
 
 See `docs/SECURITY.md` for detailed audit.
 

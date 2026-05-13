@@ -16,7 +16,6 @@ class OpenAIEmbeddingClient(EmbeddingClient):
 
     def __init__(
         self,
-        model: Optional[str] = None,
         api_key: Optional[str] = None,
         verbose: bool = False,
     ):
@@ -24,11 +23,13 @@ class OpenAIEmbeddingClient(EmbeddingClient):
         Initialize OpenAI embedding client.
 
         Args:
-            model: OpenAI embedding model (defaults to Config.EMBEDDING_MODEL)
             api_key: OpenAI API key (from env if not provided)
             verbose: Enable debug logging
+
+        Note:
+            Embedding model is always read from Config.EMBEDDING_MODEL environment variable.
         """
-        self.model = model or Config.get_embedding_model()
+        self.model = Config.get_embedding_model()
         self.verbose = verbose
 
         # Get API key from argument or config
