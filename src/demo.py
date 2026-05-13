@@ -3,7 +3,6 @@
 Demo - Shows complete workflow with data in data/ folder
 """
 
-import tempfile
 import os
 import shutil
 from pathlib import Path
@@ -12,6 +11,7 @@ from dotenv import load_dotenv
 load_dotenv(".env")
 
 # Initialize logging at runtime (in main())
+from src.config import Config
 from src.logging_config import initialize_logging, get_logger
 
 try:
@@ -69,9 +69,8 @@ def main():
 
     print(f"\n✅ Loaded {len(uploaded_files)} documents")
 
-    # Create vector store
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-        db_path = f.name
+    # Get database path (from config or temporary)
+    db_path = Config.get_database_path()
 
     # Index documents
     print("\n📊 Indexing documents...")

@@ -4,7 +4,6 @@ Construction Estimating Agent - Main Entry Point
 Orchestrates document loading, indexing, agent initialization, and interactive analysis.
 """
 
-import tempfile
 import os
 import shutil
 import sys
@@ -91,10 +90,9 @@ def main():
     upload_dir = file_loader.upload_dir
     logger.debug(f"Document loading complete: {len(uploaded_files)} files, {len(projects)} projects")
 
-    # Create temporary database
-    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-        db_path = f.name
-    logger.debug(f"Created temporary database: {db_path}")
+    # Get database path (from config or temporary)
+    db_path = Config.get_database_path()
+    logger.debug(f"Using database: {db_path}")
 
     try:
         # Index documents using orchestrator

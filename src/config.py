@@ -6,6 +6,7 @@ defaults and type safety throughout the application.
 """
 
 import os
+import tempfile
 from typing import Literal
 
 
@@ -24,9 +25,15 @@ class Config:
         "AGENT_MODEL", "claude-sonnet-4-6"
     )
 
+    # Storage (Configurable)
+    DATABASE_PATH: str | None = os.getenv("DATABASE_PATH")
+
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
     LOG_FILE: str | None = os.getenv("LOG_FILE")
+
+    # Internal: Cache for temporary database path
+    _temp_db_path: str | None = None
 
     @classmethod
     def is_debug(cls) -> bool:
@@ -71,11 +78,32 @@ class Config:
         return cls.AGENT_MODEL
 
     @classmethod
+    def get_database_path(cls) -> str:
+        """
+        Get database path.
+
+        If DATABASE_PATH is configured, returns that path.
+        Otherwise, creates and returns a temporary database path (cached).
+        The temporary file is created once and reused for the session.
+        """
+        # If DATABASE_PATH is explicitly configured, use it
+        if cls.DATABASE_PATH:
+            return cls.DATABASE_PATH
+
+        # Lazy create temporary database (cached)
+        if cls._temp_db_path is None:
+            with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+                cls._temp_db_path = f.name
+
+        return cls._temp_db_path
+
+    @classmethod
     def to_dict(cls) -> dict:
         """Export configuration as dictionary (without sensitive keys)."""
         return {
             "embedding_model": cls.EMBEDDING_MODEL,
             "agent_model": cls.AGENT_MODEL,
+            "database_path": cls.DATABASE_PATH,
             "log_level": cls.LOG_LEVEL,
             "log_file": cls.LOG_FILE,
         }
@@ -85,5 +113,7 @@ class Config:
         """Return config summary for logging."""
         return (
             f"Config(embedding_model={cls.EMBEDDING_MODEL}, "
-            f"agent_model={cls.AGENT_MODEL}, log_level={cls.LOG_LEVEL})"
+            f"agent_model={cls.AGENT_MODEL}, "
+            f"database_path={cls.DATABASE_PATH}, "
+            f"log_level={cls.LOG_LEVEL})"
         )

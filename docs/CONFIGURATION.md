@@ -54,6 +54,19 @@ Then fill in your API keys and optional settings.
   AGENT_MODEL=claude-opus-4-7
   ```
 
+#### `DATABASE_PATH`
+- **Purpose**: Specify where to store the SQLite vector database
+- **Default**: `construction_agent.db` (current directory, temporary during session)
+- **Notes**:
+  - By default, database is created in a temporary location and cleaned up after session
+  - Set this variable to persist the database across sessions
+  - Useful for saving indexes for later reuse
+- **Example**:
+  ```
+  DATABASE_PATH=/var/lib/construction_agent/vectors.db
+  DATABASE_PATH=./data/production_vectors.db
+  ```
+
 #### `LOG_LEVEL`
 - **Purpose**: Control logging verbosity
 - **Default**: `INFO`
@@ -85,6 +98,7 @@ from src.config import Config
 # Get models
 embedding_model = Config.get_embedding_model()
 agent_model = Config.get_agent_model()
+database_path = Config.get_database_path()
 
 # Check debug mode
 if Config.is_debug():
@@ -95,6 +109,7 @@ print(Config.to_dict())
 # Output: {
 #   'embedding_model': 'text-embedding-3-small',
 #   'agent_model': 'claude-sonnet-4-6',
+#   'database_path': 'construction_agent.db',
 #   'log_level': 'INFO',
 #   'log_file': None
 # }
