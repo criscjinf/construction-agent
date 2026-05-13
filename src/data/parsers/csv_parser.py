@@ -5,7 +5,7 @@ from typing import Optional
 
 import pandas as pd
 
-from src.data.models import Project, BidItem, Bidder, DataQualityReport
+from src.data.models import Project, BidItem, Bidder, DataQualityReport, UnmappedField
 from src.data.converters import ValueConverter
 
 logger = logging.getLogger(__name__)
@@ -28,6 +28,7 @@ class SchemaMapping:
         self.unit_pr_col: Optional[str] = None
         self.ext_amt_col: Optional[str] = None
         self.bid_total_col: Optional[str] = None
+        self.unmapped_cols: dict[str, str] = {}  # col_name -> inferred_type
         self.warnings: list[str] = []
 
     def is_complete(self) -> bool:
@@ -112,7 +113,7 @@ class CSVParser:
                     setattr(schema, f"{field}_col", matched_col)
                     break
 
-        # Log unmapped columns
+        # Log unmapped columns and detect their types
         mapped = {
             schema.proj_id_col,
             schema.let_dt_col,
@@ -132,7 +133,22 @@ class CSVParser:
 
         unmapped = set(columns) - mapped
         if unmapped:
-            warning = f"Unmapped columns: {', '.join(unmapped)}"
+            # Detect type for each unmapped column
+            for col in unmapped:
+                # Sample first non-null value to infer type
+                sample = None
+                for val in df[col]:
+                    if pd.notna(val):
+                        sample = val
+                        break
+
+                if sample is not None:
+                    inferred_type = ValueConverter.detect_type(sample)
+                    schema.unmapped_cols[col] = inferred_type
+                else:
+                    schema.unmapped_cols[col] = "string"
+
+            warning = f"Unmapped columns: {', '.join(unmapped)} (types: {schema.unmapped_cols})"
             schema.warnings.append(warning)
             logger.warning(warning)
 
@@ -177,6 +193,27 @@ class CSVParser:
                     unit_price=ValueConverter.to_float(row.get(self.schema.unit_pr_col), default=0.0),
                     ext_amt=ValueConverter.to_float(row.get(self.schema.ext_amt_col), default=0.0),
                 )
+
+                # Add unmapped fields
+                for col_name, inferred_type in self.schema.unmapped_cols.items():
+                    raw_value = str(row.get(col_name, "")).strip()
+
+                    # Parse numeric value if applicable
+                    parsed_value = None
+                    if inferred_type == "numeric":
+                        parsed_value = ValueConverter.to_float(row.get(col_name))
+                        if parsed_value == 0.0 and raw_value:
+                            # Check if it really is 0 or conversion failed
+                            try:
+                                parsed_value = float(raw_value)
+                            except ValueError:
+                                parsed_value = None
+
+                    item.unmapped_fields[col_name] = UnmappedField(
+                        raw=raw_value,
+                        inferred_type=inferred_type,
+                        parsed_value=parsed_value,
+                    )
 
                 # Parse bidder (only store once, reuse for subsequent items)
                 bidder_name = str(row[self.schema.bidder_col]).strip()

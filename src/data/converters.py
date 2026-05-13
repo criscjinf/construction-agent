@@ -49,3 +49,36 @@ class ValueConverter:
             return pd.to_datetime(value).date()
         except Exception:
             return None
+
+    @staticmethod
+    def detect_type(value: Any) -> str:
+        """
+        Detect if a value is numeric, date, or string.
+
+        Returns: "numeric", "date", or "string"
+        """
+        if value is None or (isinstance(value, float) and pd.isna(value)):
+            return "string"
+
+        str_value = str(value).strip()
+
+        # Empty string is always string type
+        if not str_value:
+            return "string"
+
+        # Try numeric
+        try:
+            float(str_value)
+            return "numeric"
+        except (ValueError, TypeError):
+            pass
+
+        # Try date
+        try:
+            pd.to_datetime(str_value)
+            return "date"
+        except (ValueError, TypeError, pd.errors.ParserError):
+            pass
+
+        # Default to string
+        return "string"

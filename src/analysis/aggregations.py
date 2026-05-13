@@ -253,3 +253,94 @@ class AggregationService:
             return None
 
         return (min(prices), max(prices))
+
+    @staticmethod
+    def aggregate_unmapped_field(
+        projects: list[Project],
+        field_name: str,
+        operation: str = "sum",
+    ) -> Optional[float]:
+        """
+        Aggregate an unmapped field across all items.
+
+        Args:
+            projects: List of projects
+            field_name: Name of the unmapped field
+            operation: "sum", "min", "max", "avg", "median"
+
+        Returns:
+            Aggregated value or None if field not found or no valid values
+        """
+        values = []
+
+        for project in projects:
+            for item in project.items:
+                if field_name in item.unmapped_fields:
+                    unmapped = item.unmapped_fields[field_name]
+
+                    # If already parsed as numeric, use it
+                    if unmapped.inferred_type == "numeric" and unmapped.parsed_value is not None:
+                        values.append(unmapped.parsed_value)
+                    # Try to convert string to numeric
+                    elif unmapped.inferred_type == "string":
+                        try:
+                            numeric_val = float(unmapped.raw)
+                            values.append(numeric_val)
+                        except ValueError:
+                            # Skip invalid values
+                            pass
+
+        if not values:
+            return None
+
+        if operation == "sum":
+            return sum(values)
+        elif operation == "min":
+            return min(values)
+        elif operation == "max":
+            return max(values)
+        elif operation == "avg":
+            return statistics.mean(values)
+        elif operation == "median":
+            return statistics.median(values)
+
+        return None
+
+    @staticmethod
+    def compute_unmapped_field_statistics(
+        projects: list[Project],
+        field_name: str,
+    ) -> Optional[BidStatistics]:
+        """
+        Compute statistics for an unmapped field.
+
+        Args:
+            projects: List of projects
+            field_name: Name of the unmapped field
+
+        Returns:
+            BidStatistics or None if field not found
+        """
+        values = []
+
+        for project in projects:
+            for item in project.items:
+                if field_name in item.unmapped_fields:
+                    unmapped = item.unmapped_fields[field_name]
+
+                    # If already parsed as numeric, use it
+                    if unmapped.inferred_type == "numeric" and unmapped.parsed_value is not None:
+                        values.append(unmapped.parsed_value)
+                    # Try to convert string to numeric
+                    elif unmapped.inferred_type == "string":
+                        try:
+                            numeric_val = float(unmapped.raw)
+                            values.append(numeric_val)
+                        except ValueError:
+                            # Skip invalid values
+                            pass
+
+        if not values:
+            return None
+
+        return BidStatistics(values, label=field_name)
