@@ -54,8 +54,6 @@ logs/
 
 # Output
 output/
-dist/
-build/
 
 # Test coverage
 .coverage
@@ -67,11 +65,11 @@ requirements-dev.txt
 poetry.lock
 
 # OS
-.DS_Store
 Thumbs.db
 
-# Embeddings cache (can be large)
+# Embeddings cache (can be large, only root-level)
 *.embedding
-embeddings/
+/embeddings/
 
+# Data files (only root-level)
 /data/
