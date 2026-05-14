@@ -74,4 +74,4 @@ Thumbs.db
 *.embedding
 embeddings/
 
-data/
+/data/
