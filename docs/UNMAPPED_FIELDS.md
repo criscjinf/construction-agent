@@ -220,7 +220,7 @@ The `aggregate_items` tool now accepts unmapped field names:
 
 ## Testing
 
-The implementation includes 18 comprehensive tests:
+The implementation includes comprehensive tests for:
 
 - Type detection edge cases (empty, None, mixed)
 - Parsing with unmapped columns

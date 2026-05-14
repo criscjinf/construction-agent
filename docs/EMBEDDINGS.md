@@ -34,8 +34,8 @@ CSV (sample_bid_tabulation.csv)
 ```
 
 ### Result:
-- ✅ **120 documents** indexed
-- ✅ Each item is a **short string**
+- ✅ Each bid item becomes a **document**
+- ✅ Each item is a **short string** (description + prices)
 - ✅ Each string has a **separate embedding**
 - ✅ Semantic search works on individual items
 
@@ -46,12 +46,11 @@ CSV (sample_bid_tabulation.csv)
 ### Flow:
 
 ```
-PDF (plans.pdf - 21.6MB)
+PDF (plans.pdf)
         ↓
    Text Extraction (PyPDF2 or OCR)
-   Result: 193,846 characters
         ↓
-   Chunk Division (size ~500 chars)
+   Chunk Division (variable-size chunks)
         ↓
    For each chunk:
    ┌──────────────────────────────────────┐
@@ -77,12 +76,12 @@ PDF (plans.pdf - 21.6MB)
    │ doc_id: pdf_plans_chunk_1            │
    └──────────────────────────────────────┘
    
-   ... (1847 chunks total)
+   ... (many chunks total)
 ```
 
 ### Result:
-- ✅ **~1847 chunks** indexed
-- ✅ Each chunk is a **text block** (~500 characters)
+- ✅ Multiple chunks indexed
+- ✅ Each chunk is a **text block** (variable size)
 - ✅ Each chunk has a **separate embedding**
 - ✅ Semantic search works on document sections
 
@@ -92,12 +91,12 @@ PDF (plans.pdf - 21.6MB)
 
 | Aspect | CSV | PDF |
 |--------|-----|-----|
-| **What gets embedded** | Each item (description + price) | Text chunks (paragraphs) |
-| **Number of docs** | Few (120 items) | Many (1000+) |
-| **Size of each doc** | Small (50-100 chars) | Medium (500 chars) |
-| **Structure** | Structured (columns) | Unstructured (free text) |
+| **What gets embedded** | Each bid item | Text chunks |
+| **Number of docs** | Fewer docs | More chunks |
+| **Size of each doc** | Small (brief) | Larger (context) |
+| **Structure** | Structured (columns) | Unstructured (text) |
 | **Search** | For specific item | For concept/theme |
-| **Cost** | 120 embeddings | 1000+ embeddings |
+| **Cost** | Lower | Higher |
 
 ---
 
@@ -133,17 +132,12 @@ PDF (plans.pdf - 21.6MB)
 
 ## 📊 Embedding Costs
 
-### OpenAI text-embedding-3-small:
-- **CSV**: 120 items × ~15 tokens = 1,800 tokens
-- **PDF**: 1,847 chunks × ~150 tokens = 277,050 tokens
-- **Total**: ~278,850 tokens
+Using `text-embedding-3-small` (OpenAI):
+- CSV items: Small token count
+- PDF chunks: Larger token count
+- Total: Typically under $0.01 per session
 
-### Estimated cost:
-```
-$0.02 / 1M tokens
-278,850 tokens → ~$0.0056
-(less than 1 cent per session!)
-```
+Batch processing significantly reduces API calls and costs.
 
 ---
 
@@ -193,12 +187,11 @@ Maximum depth 18 inches per specifications..."
 
 ```python
 # OLD (slow):
-# CSV: 120 items × 1 API call = 120 API calls ❌
+# Individual API call per item ❌
 
 # NEW (fast):
-# CSV: batch_embed(120 items, batch_size=1000) = 1 API call ✅
-# PDF: batch_embed(1847 chunks, batch_size=1000) = 2 API calls ✅
-# Total: 3 API calls instead of 1,967! 🚀
+# Batch embed multiple items in one API call ✅
+# Total: Significantly fewer API calls 🚀
 
 # CSV Indexer - now uses batch
 texts = [item.description + price for item in items]  # Collect all
@@ -215,12 +208,10 @@ for chunk, embedding in zip(chunks, embeddings):
 
 ### Performance Improvement:
 
-| Scenario | OLD | NEW | Speedup |
-|----------|-----|-----|---------|
-| 120 CSV items | 120 calls | 1 call | **120x** |
-| 1,847 PDF chunks | 1,847 calls | 2 calls | **923x** |
-| Total | 1,967 calls | 3 calls | **656x** |
-| Time (estimate) | ~30-50s | ~2-5s | **5-10x** |
+Batch embedding significantly reduces:
+- ✅ Number of API calls (from one-per-item to one-per-batch)
+- ✅ Processing time 
+- ✅ Cost
 
 ### 2. Search (when user asks):
 
@@ -238,46 +229,44 @@ results = vector_store.search(query_embedding, limit=5)
 ## 📈 Complete Flow
 
 ```
-┌─ CSV (120 items)
+┌─ CSV Items
 │   ├─ Item 1 → Embedding → Storage
 │   ├─ Item 2 → Embedding → Storage
 │   └─ Item N → Embedding → Storage
 │
-├─ PDF (1847 chunks)
+├─ PDF Chunks
 │   ├─ Chunk 1 → Embedding → Storage
 │   ├─ Chunk 2 → Embedding → Storage
 │   └─ Chunk N → Embedding → Storage
 │
 ├─ User Query
 │   └─ "What about drainage?"
-│       → Embedding (1 API call)
+│       → Embedding
 │       → Vector Search (LOCAL)
 │       → Results from CSV + PDF combined
 │
 └─ Agent Response
-    └─ "Based on CSV: cost is $45k"
-       "Based on PDF: installation requires..."
+    └─ Combines results from multiple sources
 ```
 
 ---
 
 ## ✅ Summary
 
-| Document | Embedded? | How? | Quantity |
-|----------|-----------|------|----------|
-| **CSV** | ✅ Yes | Item by item | 120 |
-| **PDF** | ✅ Yes | Chunk by chunk | 1847 |
-| **Total** | ✅ Yes | Both combined | ~2000 |
+| Document | Embedded? | How? |
+|----------|-----------|------|
+| **CSV** | ✅ Yes | Item by item |
+| **PDF** | ✅ Yes | Chunk by chunk |
 
-**Result:** System can search ~2000 documents simultaneously with semantic search! 🚀
+**Result:** System can search all documents simultaneously with semantic search! 🚀
 
 ---
 
 ## 💰 Optimizations Applied
 
-### 1. **Batch Embedding** (5-10x speedup)
-- ✅ Process up to 1,000 items per API call
-- ✅ Reduces API overhead from ~2000 calls to ~3 calls
+### 1. **Batch Embedding**
+- ✅ Process multiple items per API call
+- ✅ Significantly reduces API calls vs individual requests
 - ✅ Default batch_size: 1000 (tuned for OpenAI limits)
 - See: `src/vectorstore/embeddings/openai.py`
 - See: `src/data/indexers/csv_indexer.py` and `pdf_indexer.py`
@@ -288,18 +277,15 @@ results = vector_store.search(query_embedding, limit=5)
 batch_size = 1000  # Max items per API request
 
 # Benefits:
-# - Single CSV with 500 items: 1 call
-# - Single PDF with 2000 chunks: 2 calls
-# - Total indexing time: 2-5 seconds
+# - Processes multiple items per API call
+# - Indexing completes in seconds (vs minutes)
 ```
 
 ### 3. **Cost Reduction**
-```
-BEFORE: 1,967 API calls × $0.02/1M tokens
-AFTER:  3 API calls × $0.02/1M tokens
-
-Savings: ~99.8% fewer API calls ✅
-```
+Batch processing dramatically reduces:
+- Number of API calls
+- Processing time
+- Associated costs ✅
 
 ### 4. **Mock Embeddings (Testing)**
 

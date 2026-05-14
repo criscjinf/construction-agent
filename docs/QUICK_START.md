@@ -1,6 +1,6 @@
 # 🚀 Quick Start - Construction Estimating Agent
 
-## ⚡ TL;DR (30 seconds)
+## ⚡ TL;DR
 
 ```bash
 agent
@@ -81,7 +81,7 @@ agent-demo
 This automatically:
 - Loads all files from `data/`
 - Indexes them with batch embeddings
-- Runs 3 example queries
+- Runs example queries
 - Cleans up and exits
 
 ---

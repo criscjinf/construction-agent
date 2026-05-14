@@ -26,9 +26,9 @@ Options:
 
 Loading CSV: data/sample_bid_tabulation.csv
 ✅ Indexing complete:
-   • CSV items: 120
+   • CSV items: [count]
    • PDF chunks: 0
-   • Total: 120
+   • Total: [count]
 ```
 
 **Analysis:**
@@ -76,14 +76,14 @@ Loading CSV: data/sample_bid_tabulation.csv
 2026-05-08 14:32:46 | DEBUG   | loaders              | load                 | Auto-detected format: CSV
 2026-05-08 14:32:46 | DEBUG   | parsers              | parse                | Inferring schema from CSV...
 2026-05-08 14:32:46 | DEBUG   | parsers              | infer_schema         | Found columns: PROJ_ID, ITEM_NO, ITEM_DESC, QUANTITY, UNIT_PRICE, BIDDER
-2026-05-08 14:32:47 | DEBUG   | document_loader      | load_and_index_csv   | Embedded 120 items
-2026-05-08 14:32:47 | INFO    | run_agent            | main                 | ✅ CSV indexed: sample_bid_tabulation.csv (120 items)
+2026-05-08 14:32:47 | DEBUG   | document_loader      | load_and_index_csv   | Embedded all items
+2026-05-08 14:32:47 | INFO    | run_agent            | main                 | ✅ CSV indexed: sample_bid_tabulation.csv
 ```
 
 **What this means:**
 - CSV detected automatically ✅
 - Schema inferred from columns ✅
-- All 120 items embedded successfully ✅
+- All items embedded successfully ✅
 
 ---
 
@@ -220,9 +220,9 @@ $ LOG_LEVEL=DEBUG python3 scripts/run_agent.py
 ==========================================================================================
 
 ✅ Indexing complete:
-   • CSV items: 120
-   • PDF chunks: 1,847
-   • Total: 1,967
+   • CSV items: [count]
+   • PDF chunks: [count]
+   • Total: [combined count]
 
 ==========================================================================================
   🤖 INITIALIZING AGENT

@@ -2,13 +2,13 @@
 
 An AI-powered agent that analyzes construction bid data and project plans using adaptive data parsing, semantic search, statistical analysis, and Claude API tool-use patterns.
 
-**Status**: ✅ Complete — 138 tests passing, SOLID architecture, production-ready
+**Status**: ✅ Complete — 138 tests, SOLID architecture, fully functional
 
 ---
 
 ## 🚀 How to Run It
 
-### Quick Start (<5 minutes)
+### Quick Start
 
 ```bash
 # 1. Clone and setup
@@ -52,14 +52,14 @@ Try asking:
 
 **"Do one thing well"** — Each component has a single responsibility, making the system extensible and testable without over-engineering.
 
-### Phase 1: Data Ingestion (47 tests)
+### Phase 1: Data Ingestion
 
 **Decision: Strategy Pattern for CSV Parsing**
 
 - **Why**: Construction projects vary significantly. Different clients use different column names, missing columns, different formats.
 - **Solution**: `CSVParser.infer_schema()` auto-detects columns from data instead of hardcoding
 - **Pattern**: Strategy pattern allows plugging in new parsers without modifying DataLoader
-- **Benefit**: Handle 10 different CSV formats without code changes
+- **Benefit**: Adapt to different CSV schemas without code changes
 
 **Decision: Unmapped Fields Support (Hybrid Approach)**
 
@@ -72,7 +72,7 @@ Try asking:
 
 ---
 
-### Phase 2: Vector Store (34 tests)
+### Phase 2: Vector Store
 
 **Decision: Repository Pattern + SQLite (not Pinecone)**
 
@@ -88,10 +88,9 @@ Try asking:
 
 **Decision: Batch Embedding Optimization**
 
-- **Why**: Embedding 1000 CSV rows one-at-a-time = 1000 API calls. Batch = 1 call.
-- **Solution**: `batch_embed(texts, batch_size=1000)` reduces calls 99.8%
-- **Cost**: CSV of 100 items = $0.001 vs $1.00 without batching
-- **Benefit**: 5-10x speedup, massive cost savings
+- **Why**: Embedding multiple rows separately is inefficient. Batch processing reduces API calls significantly.
+- **Solution**: `batch_embed(texts, batch_size=1000)` processes embeddings in batches
+- **Benefit**: Reduced API calls, faster processing, lower cost
 
 **Code**: `src/vectorstore/embeddings/openai.py:batch_embed()`
 
@@ -105,7 +104,7 @@ Try asking:
 
 ---
 
-### Phase 3: Analysis Tools (18 tests)
+### Phase 3: Analysis Tools
 
 **Decision: Outlier Detection (Z-score + IQR)**
 
@@ -118,7 +117,7 @@ Try asking:
 
 ---
 
-### Phase 4: Agent Framework (31 tests)
+### Phase 4: Agent Framework
 
 **Decision: Tool-Use (not LangChain, native Claude API)**
 
@@ -148,7 +147,7 @@ Try asking:
 
 **Decision: Centralized Config (not scattered os.getenv)**
 
-- **Why**: Environment variables used in 8 different modules. Duplicated, hard to maintain.
+- **Why**: Environment variables scattered across modules. Duplicated, hard to maintain.
 - **Solution**: Single `Config` class reads all env vars at startup
 - **Benefit**:
   - Single source of truth
@@ -160,13 +159,13 @@ Try asking:
 
 **Decision: CLI Separation (InteractiveShell, FileLoader, etc)**
 
-- **Why**: main.py was 500 lines. Too many responsibilities.
+- **Why**: main.py had multiple responsibilities. Hard to test and maintain.
 - **Pattern**: Extract concerns → separate classes
   - `FileLoader` = file/folder UI
   - `InteractiveShell` = REPL loop
   - `IndexOrchestrator` = document indexing
 - **SOLID**: Single Responsibility Principle
-- **Benefit**: main.py now 130 lines, testable, reusable
+- **Benefit**: Cleaner, testable, reusable components
 
 **Code**: `src/cli/`, `src/ui/`, `src/data/indexers/`
 
@@ -190,11 +189,11 @@ Try asking:
 ## 📊 Quality Metrics
 
 - **Tests**: 138 (unit + integration)
-- **Coverage**: >90% on critical paths
+- **Coverage**: Comprehensive coverage of critical paths
 - **Code**: ~2,000 lines (src/)
-- **Principles**: SOLID compliance verified
-- **Security**: OWASP Top 10 audit passed
-- **Performance**: Batch embeddings = 99.8% fewer API calls
+- **Principles**: SOLID principles applied throughout
+- **Security**: Follows OWASP Top 10 guidelines
+- **Design**: 7 design patterns applied appropriately
 
 ---
 
@@ -204,7 +203,7 @@ Try asking:
 - **`docs/CONFIGURATION.md`** — Model selection, database paths, logging
 - **`docs/UNMAPPED_FIELDS.md`** — How unknown CSV columns are handled
 - **`docs/SETUP.md`** — Detailed installation, entry points, troubleshooting
-- **`docs/SECURITY.md`** — Security audit (OWASP Top 10 compliance)
+- **`docs/EMBEDDINGS.md`** - How the system generate embeddings
 
 ---
 
@@ -346,14 +345,14 @@ black src/ tests/
 
 ## 🏆 Key Achievements
 
-✅ **SOLID Principles**: Each class has one reason to change  
-✅ **Design Patterns**: 7 patterns applied purposefully  
+✅ **SOLID Principles**: Each class has a single responsibility  
+✅ **Design Patterns**: Multiple patterns (Strategy, Factory, Repository, etc.) applied appropriately  
 ✅ **Robustness**: Handles edge cases (empty files, missing columns, malformed data)  
-✅ **Performance**: Batch embeddings reduce API calls 99.8%  
-✅ **Extensibility**: Easy to add new parsers, tools, storage backends  
-✅ **Testing**: 138 tests, >90% coverage, zero regressions  
-✅ **Security**: OWASP Top 10 compliant, API keys protected  
-✅ **Documentation**: Architecture decisions explained, not assumed
+✅ **Batch Processing**: Efficient embedding with batched API calls  
+✅ **Extensibility**: Architecture allows adding new parsers, tools, storage backends  
+✅ **Testing**: Comprehensive test suite with 138 tests  
+✅ **Security**: Secure API key handling, input validation  
+✅ **Documentation**: Architecture decisions explained clearly
 
 ---
 
@@ -432,13 +431,13 @@ See `docs/SECURITY.md` for OWASP Top 10 audit.
 
 ---
 
-## 🚀 For Evaluators
+## 🚀 Project Overview
 
 This project demonstrates:
 
-1. **Architecture Skills**: 7 design patterns applied appropriately, not dogmatically
-2. **Robustness**: Handles real-world data variability (CSV schema inference, unmapped fields, OCR fallback)
-3. **Query Quality**: Hybrid search + tool composition = accurate, grounded answers
-4. **Outlier Detection**: Proper statistical methods with edge case handling
-5. **Code Quality**: SOLID principles, >90% test coverage, minimal over-engineering
-6. **Communication**: Code is self-documenting, architecture decisions explained
+1. **Architecture**: 7 design patterns applied to solve real problems
+2. **Data Handling**: CSV schema inference, unmapped fields support, adaptive parsing
+3. **Search & Query**: Hybrid semantic+keyword search with tool composition
+4. **Analysis**: Statistical methods for outlier detection with proper edge case handling
+5. **Code Quality**: SOLID principles, comprehensive tests, clean architecture
+6. **Documentation**: Clear explanation of design decisions and trade-offs
